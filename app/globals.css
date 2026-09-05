@@ -1,10 +1,1 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    /* Using a subtle, premium off-white/gray background as our canvas */
-    @apply bg-zinc-50 text-zinc-950 antialiased;
-  }
-}
+@import "tailwindcss";

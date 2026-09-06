@@ -30,6 +30,11 @@ model User {
   lastName     String
   role         Role    @default(CUSTOMER)
 
+  // 🚀 Payout Configuration for Organizers
+  payoutPhone   String? // M-Pesa number for receiving payouts
+  bankName      String? // e.g. Equity Bank, KCB
+  accountNumber String? // Bank account number
+
   // Relations
   events Event[] // A user can organize many events
 
@@ -90,12 +95,14 @@ enum PaymentStatus {
 }
 
 model Booking {
-  id            String        @id @default(uuid())
-  reference     String        @unique // Paystack transaction reference
-  amount        Float // Total amount paid
-  status        PaymentStatus @default(PENDING)
-  customerEmail String
-  customerName  String
+  id              String        @id @default(uuid())
+  reference       String        @unique
+  amount          Float // Total amount paid by customer
+  platformFee     Float         @default(0.0) // Bamba Tickets cut (e.g. 5%)
+  organizerPayout Float         @default(0.0) // Net amount due to organizer
+  status          PaymentStatus @default(PENDING)
+  customerEmail   String
+  customerName    String
 
   // Relations
   eventId String

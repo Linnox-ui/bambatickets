@@ -88,6 +88,12 @@ export default async function EditEventPage({ params }: PageProps) {
           >
             Manage Staff
           </Link>
+          <Link
+            href={`/studio/events/${event.id}/finance`}
+            className="px-4 py-2.5 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl transition-all"
+          >
+            Financials & Payouts
+          </Link>
         </div>
       </div>
 

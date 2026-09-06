@@ -23,14 +23,118 @@ enum Role {
 // ------------------------------------------------------
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String  @id @default(uuid())
+  email        String  @unique
   passwordHash String?
   firstName    String
   lastName     String
-  role         Role     @default(CUSTOMER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         Role    @default(CUSTOMER)
+
+  // Relations
+  events Event[] // A user can organize many events
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
 
   @@map("users")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  location    String
+  date        DateTime
+  imageUrl    String?
+  isPublished Boolean  @default(false)
+
+  // Relations
+  organizerId String
+  organizer   User         @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  ticketTiers TicketTier[] // An event can have many ticket tiers (VIP, Regular, etc.)
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  bookings    Booking[]
+  eventStaffs EventStaff[]
+
+  @@map("events")
+}
+
+model TicketTier {
+  id       String @id @default(uuid())
+  name     String // e.g., "Early Bird", "VIP", "Regular"
+  price    Float // Price of the ticket
+  capacity Int // Total number of tickets available for this tier
+
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tickets   Ticket[]
+
+  @@map("ticket_tiers")
+}
+
+// ------------------------------------------------------
+// PAYMENT & BOOKING ENUMS & MODELS
+// ------------------------------------------------------
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  reference     String        @unique // Paystack transaction reference
+  amount        Float // Total amount paid
+  status        PaymentStatus @default(PENDING)
+  customerEmail String
+  customerName  String
+
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  buyerId String? // Optional: if logged in user bought it
+  buyer   User?   @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+
+  tickets Ticket[] // The actual issued admission tickets
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bookings")
+}
+
+model Ticket {
+  id         String  @id @default(uuid())
+  ticketCode String  @unique @default(uuid()) // Unique code for gate scanning
+  isUsed     Boolean @default(false) // Checked in at the gate
+
+  // Relations
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  tierId String
+  tier   TicketTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("tickets")
+}
+
+model EventStaff {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  pinCode   String // Secure 4-digit PIN for gate login
+  createdAt DateTime @default(now())
 }

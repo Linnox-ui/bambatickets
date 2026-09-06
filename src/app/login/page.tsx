@@ -1,127 +1,134 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react"; // 1. Use the official client-side function
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Ticket, Mail, Lock, Loader2, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { loginAction } from "../../actions/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const formData = new FormData(e.currentTarget);
+    const result = await loginAction(formData);
 
-    try {
-      // 2. Call signIn directly from the client, preventing automatic page reloads
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+    setIsLoading(false);
 
-      if (result?.error) {
-        // 3. Handle incorrect passwords
-        toast.error("Invalid email or password.");
-        setIsLoading(false);
-      } else if (result?.ok) {
-        // 4. Handle success
-        toast.success("Welcome back!");
-        router.push("/"); // Send them to the homepage
-        router.refresh(); // Refresh the router to update session state globally
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred.");
-      setIsLoading(false);
+    if (result?.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Welcome back to Studio!");
+      router.push("/studio");
+      router.refresh();
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Colorful Atmospheric Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-fuchsia-600/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-cyan-600/20 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center relative overflow-hidden selection:bg-fuchsia-500 selection:text-white">
+      {/* Ambient Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-100 bg-linear-to-tr from-fuchsia-600/20 to-cyan-600/20 blur-[150px] rounded-full pointer-events-none" />
 
-      {/* Frosted Glass Card */}
-      <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-800/60 p-8 relative z-10">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            BambaTickets
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm font-medium">
-            Welcome back. Log in to manage your events.
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
+        {/* Logo Header */}
+        <div className="flex flex-col items-center mb-8">
+          <Link href="/" className="flex items-center gap-3 group mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-linear-to-tr from-fuchsia-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-fuchsia-500/25 group-hover:scale-105 transition-transform">
+              <Ticket className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          <h2 className="text-center text-3xl font-extrabold text-white tracking-tight">
+            Welcome back
+          </h2>
+          <p className="mt-2 text-center text-sm text-slate-400">
+            Sign in to your Creator Studio account
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all disabled:opacity-50 text-slate-100 placeholder-slate-600 outline-none"
-              placeholder="hello@bambatickets.com"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                Password
+        {/* Glassmorphic Auth Card */}
+        <div className="bg-slate-900/60 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-3xl sm:px-10 border border-slate-800/60">
+          <form className="space-y-6" onSubmit={onSubmit}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                Email Address
               </label>
-              <Link
-                href="#"
-                className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
-              >
-                Forgot password?
-              </Link>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-slate-500" />
+                </div>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  disabled={isLoading}
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all outline-none"
+                  placeholder="creator@example.com"
+                />
+              </div>
             </div>
-            <input
-              type="password"
-              name="password"
-              required
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+                  Password
+                </label>
+                <Link
+                  href="#"
+                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-4 w-4 text-slate-500" />
+                </div>
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  disabled={isLoading}
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all outline-none"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
               disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-fuchsia-500/50 focus:border-fuchsia-500 transition-all disabled:opacity-50 text-slate-100 placeholder-slate-600 outline-none"
-              placeholder="••••••••"
-            />
+              className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-linear-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 focus:ring-fuchsia-500 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+            <p className="text-sm text-slate-400">
+              Don't have a creator account?{" "}
+              <Link
+                href="/register"
+                className="font-bold text-white hover:text-fuchsia-400 transition-colors"
+              >
+                Apply to host events
+              </Link>
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 text-white font-semibold py-3 rounded-lg shadow-lg shadow-fuchsia-500/25 transition-all active:scale-[0.98] flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin text-white/70" />
-                Authenticating...
-              </>
-            ) : (
-              "Log In"
-            )}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-slate-400 mt-6">
-          Don't have an account?{" "}
-          <Link
-            href="/register"
-            className="text-fuchsia-400 font-semibold hover:text-fuchsia-300 transition-colors"
-          >
-            Sign up
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

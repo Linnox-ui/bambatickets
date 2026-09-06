@@ -5,51 +5,57 @@ import prisma from "../lib/prisma";
 import { signIn } from "../auth";
 import { AuthError } from "next-auth";
 
-export async function registerUser(formData: FormData) {
+export async function registerAction(formData: FormData) {
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   if (!firstName || !lastName || !email || !password) {
-    return { error: "All fields are required" };
+    return { error: "All fields are required." };
   }
 
   try {
-    // 1. Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
-      return { error: "A user with this email already exists" };
+      return { error: "An account with this email already exists." };
     }
 
-    // 2. Hash the password securely
-    const passwordHash = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Create the user in the Neon database
+    // FIX: Using passwordHash from your schema, and assigning ORGANIZER role
     await prisma.user.create({
       data: {
         firstName,
         lastName,
         email,
-        passwordHash,
-        // Role defaults to CUSTOMER as defined in our Prisma schema
+        passwordHash: hashedPassword,
+        role: "ORGANIZER",
       },
     });
 
-    return { success: "Account created successfully!" };
+    return { success: "Account created successfully! You can now log in." };
   } catch (error) {
     console.error("Registration error:", error);
-    return { error: "Something went wrong during registration" };
+    return { error: "Something went wrong. Please try again." };
   }
 }
 
-export async function loginUser(formData: FormData) {
+export async function loginAction(formData: FormData) {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
   try {
-    // This will securely authenticate the user and set the session cookie
-    await signIn("credentials", formData);
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    return { success: "Logged in successfully." };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -59,8 +65,6 @@ export async function loginUser(formData: FormData) {
           return { error: "Something went wrong during login." };
       }
     }
-    // In Next.js, successful redirects are actually thrown as errors.
-    // We MUST rethrow non-AuthErrors so the redirect to the homepage works!
     throw error;
   }
 }

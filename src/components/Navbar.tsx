@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Search, X } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import {
+  ArrowRight,
+  Search,
+  X,
+  User,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 
 type NavbarProps = {
   searchQuery?: string;
@@ -15,21 +23,27 @@ export default function Navbar({
   onSearchChange,
 }: NavbarProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [taps, setTaps] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // 🚀 THE PHANTOM PROTOCOL (DESKTOP)
-  // Listens for the secret word "bambahq" typed anywhere on the site
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     let sequence = "";
     const secretCode = "bambahq";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       sequence += e.key.toLowerCase();
-      // Keep the sequence length capped to our secret code length
       if (sequence.length > secretCode.length) {
         sequence = sequence.slice(sequence.length - secretCode.length);
       }
-      // If the sequence matches perfectly, execute jump
       if (sequence === secretCode) {
         router.push("/hq");
       }
@@ -39,11 +53,9 @@ export default function Navbar({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [router]);
 
-  // 🚀 THE PHANTOM PROTOCOL (MOBILE)
-  // Rapid tap the TV marquee 5 times to trigger the jump
   const handlePhantomTap = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Stops the link from sending you to the homepage
+    e.stopPropagation();
 
     const newTaps = taps + 1;
     setTaps(newTaps);
@@ -53,34 +65,26 @@ export default function Navbar({
       router.push("/hq");
     }
 
-    // Reset the counter if they don't tap fast enough (2 seconds)
     setTimeout(() => setTaps(0), 2000);
   };
 
   return (
-    <div className="sticky top-0 z-50 w-full px-4 sm:px-8 lg:px-12 pt-2 sm:pt-4 pb-2 pointer-events-none">
-      <header className="pointer-events-auto max-w-7xl mx-auto border border-orange-500/20 bg-slate-900/85 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex flex-wrap sm:flex-nowrap items-center justify-between p-3 sm:px-6 sm:py-0 min-h-16 sm:h-20 gap-x-2 gap-y-3 sm:gap-6 transition-all duration-300">
+    <div
+      className={`sticky top-0 z-50 w-full pt-2 sm:pt-4 pb-2 px-4 sm:px-8 lg:px-12 pointer-events-none transition-all duration-300 ${isScrolled ? "-translate-y-2" : ""}`}
+    >
+      <header
+        className={`pointer-events-auto max-w-7xl mx-auto border transition-all duration-500 rounded-2xl sm:rounded-3xl flex flex-wrap sm:flex-nowrap items-center justify-between p-3 sm:px-6 sm:py-0 min-h-16 sm:h-20 gap-x-2 gap-y-3 sm:gap-6 ${isScrolled ? "bg-slate-950/90 border-slate-800/80 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md" : "bg-slate-900/85 border-orange-500/20 shadow-[0_10px_40px_rgba(0,0,0,0.5)] backdrop-blur-2xl"}`}
+      >
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          @keyframes tv-scroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-          }
-          .animate-tv-scroll {
-            animation: tv-scroll 8s linear infinite;
-            display: inline-block;
-            white-space: nowrap;
-          }
-          .fade-edges {
-            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-          }
+          @keyframes tv-scroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+          .animate-tv-scroll { animation: tv-scroll 8s linear infinite; display: inline-block; white-space: nowrap; }
+          .fade-edges { mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); }
         `,
           }}
         />
 
-        {/* 1. LEFT: Logo + Secret Marquee */}
         <div className="order-1 flex items-center gap-2 sm:gap-4 shrink-0">
           <Link
             href="/"
@@ -88,12 +92,11 @@ export default function Navbar({
           >
             <img
               src="/logo.svg"
-              alt="Bamba Tickets Logo"
+              alt="Bamba Tickets"
               className="w-7 h-7 sm:w-9 sm:h-9 object-contain hover:scale-110 transition-transform duration-300"
             />
           </Link>
 
-          {/* 🚀 HIDDEN TRIGGER: Clicking this 5 times opens HQ */}
           <div
             onClick={handlePhantomTap}
             className="relative w-24 sm:w-32 lg:w-40 h-8 overflow-hidden fade-edges flex items-center shrink-0 cursor-default select-none"
@@ -104,26 +107,58 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* 2. RIGHT: Action Buttons (No HQ Button anywhere in the HTML!) */}
         <div className="order-2 sm:order-3 flex items-center gap-3 sm:gap-4 shrink-0 ml-auto sm:ml-0">
-          <Link
-            href="/studio"
-            className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold rounded-full text-xs transition-all"
-          >
-            Organizer Studio
-          </Link>
-          <Link
-            href="/login"
-            className="group relative px-4 py-2 sm:px-6 sm:py-2.5 bg-linear-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-slate-950 font-black rounded-full text-[11px] sm:text-xs tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:-translate-y-0.5 active:scale-95 overflow-hidden flex items-center gap-1.5 shrink-0"
-          >
-            <div className="absolute inset-0 w-full h-full bg-white/30 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-            <span className="relative flex items-center gap-1.5">
-              Sign In <ArrowRight className="w-3 h-3 hidden sm:block" />
-            </span>
-          </Link>
+          {!session ? (
+            <>
+              <Link
+                href="/studio"
+                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold rounded-full text-xs transition-all"
+              >
+                Organizer Studio
+              </Link>
+              <Link
+                href="/login"
+                className="group relative px-4 py-2 sm:px-6 sm:py-2.5 bg-linear-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 text-slate-950 font-black rounded-full text-[11px] sm:text-xs tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:-translate-y-0.5 active:scale-95 overflow-hidden flex items-center gap-1.5 shrink-0"
+              >
+                <div className="absolute inset-0 w-full h-full bg-white/30 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
+                <span className="relative flex items-center gap-1.5">
+                  Sign In <ArrowRight className="w-3 h-3 hidden sm:block" />
+                </span>
+              </Link>
+            </>
+          ) : (
+            <div className="flex items-center gap-3 sm:gap-4 pl-2 sm:pl-4 sm:border-l sm:border-slate-800/80">
+              {session?.user?.role === "ORGANIZER" && (
+                <Link
+                  href="/studio"
+                  className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-400 rounded-lg transition-all text-xs font-bold shadow-inner"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" /> Studio
+                </Link>
+              )}
+              <div className="flex flex-col items-end sm:flex">
+                <span className="text-xs font-bold text-white tracking-wide">
+                  {session?.user?.firstName || "User"}
+                </span>
+                <span className="text-[9px] font-mono text-orange-500 uppercase tracking-widest">
+                  {session?.user?.role || "CUSTOMER"}
+                </span>
+              </div>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-800/80 rounded-full flex items-center justify-center border border-slate-700 shadow-inner shrink-0 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-orange-400 transition-colors relative z-10" />
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-2 sm:p-2.5 text-slate-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-500/10 shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* 3. CENTER: The Live Search Bar */}
         <div className="order-3 sm:order-2 w-full sm:flex-1 sm:max-w-md px-1 sm:px-4">
           <div className="relative w-full group">
             <Search
@@ -134,7 +169,7 @@ export default function Navbar({
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
               placeholder="Search events..."
-              className="w-full bg-slate-950/60 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-500 rounded-full pl-9 sm:pl-11 pr-10 py-2 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
+              className="w-full bg-slate-950/60 border border-slate-800 text-xs sm:text-sm text-white placeholder-slate-500 rounded-full pl-9 sm:pl-11 pr-10 py-2 sm:py-2.5 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-inner"
             />
             {searchQuery && onSearchChange && (
               <button

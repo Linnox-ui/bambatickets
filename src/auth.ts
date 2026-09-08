@@ -20,12 +20,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
 
-        // FIX: Check user.passwordHash instead of user.password
         if (!user || !user.passwordHash) {
           return null;
         }
 
-        // FIX: Compare against user.passwordHash
         const passwordsMatch = await bcrypt.compare(
           credentials.password as string,
           user.passwordHash,
@@ -36,6 +34,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: user.id,
             email: user.email,
             name: `${user.firstName} ${user.lastName}`,
+            role: user.role,
+            firstName: user.firstName,
           };
         }
 
@@ -44,17 +44,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
-      }
-      return session;
-    },
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        token.role = user.role;
+        token.firstName = user.firstName;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (token.sub && session.user) {
+        session.user.id = token.sub;
+        session.user.role = token.role as string;
+        session.user.firstName = token.firstName as string;
+      }
+      return session;
     },
   },
   pages: {

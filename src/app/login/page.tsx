@@ -3,10 +3,9 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { ArrowRight, ShieldAlert, Mail, KeyRound } from "lucide-react";
 
-// 🚀 Sub-component that reads searchParams safely inside Suspense
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +32,14 @@ function LoginForm() {
         setError("Invalid credentials. Access denied.");
         setLoading(false);
       } else {
-        router.push(callbackUrl);
+        const session = await getSession();
+
+        if (session?.user?.role === "ORGANIZER") {
+          router.push("/studio");
+        } else {
+          router.push(callbackUrl !== "/" ? callbackUrl : "/");
+        }
+
         router.refresh();
       }
     } catch (err) {

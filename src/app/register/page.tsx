@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { registerUser } from "../../actions/auth";
+import { useRouter } from "next/navigation";
 import {
   Ticket,
   Mic2,
   ArrowRight,
-  CheckCircle2,
   ShieldCheck,
   Mail,
   KeyRound,
@@ -18,8 +18,8 @@ import {
 export default function RegisterPage() {
   const [role, setRole] = useState<"CUSTOMER" | "ORGANIZER">("CUSTOMER");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,36 +34,10 @@ export default function RegisterPage() {
     if (res.error) {
       setError(res.error);
       setLoading(false);
-    } else if (res.success) {
-      setSuccess(true);
-      setLoading(false);
+    } else if (res.success && res.email) {
+      router.push(`/verify-email?email=${encodeURIComponent(res.email)}`);
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-[2.5rem] p-8 text-center shadow-2xl animate-fade-in-up">
-          <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-          </div>
-          <h2 className="text-2xl font-black text-white mb-2">
-            Verify Your Email
-          </h2>
-          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-            We've sent a secure verification link to your inbox. Please click it
-            to activate your {role.toLowerCase()} account.
-          </p>
-          <Link
-            href="/login"
-            className="px-6 py-3 bg-slate-800 hover:bg-orange-500 text-slate-200 hover:text-slate-950 font-bold rounded-xl transition-colors inline-flex items-center gap-2 text-xs"
-          >
-            Proceed to Login <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-orange-500/30 selection:text-orange-50 font-sans relative flex flex-col justify-center items-center px-4 py-12">
@@ -112,11 +86,9 @@ export default function RegisterPage() {
       </div>
 
       <div className="w-full max-w-lg relative z-10 animate-fade-in-up">
-        {/* MONOLITHIC CARD CONTAINER */}
         <div className="bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 rounded-[2.5rem] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-orange-500/50 to-transparent" />
 
-          {/* EMBEDDED HEADER ANIMATION */}
           <div className="flex flex-col items-center gap-3 mb-6">
             <Link href="/" className="relative group">
               <div className="relative w-16 h-16 flex items-center justify-center transition-all duration-700 ease-out group-hover:scale-110">
@@ -148,7 +120,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* ROLE TOGGLE */}
           <div className="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800 mb-6">
             <button
               type="button"

@@ -5,7 +5,6 @@ import prisma from "../../../lib/prisma";
 import {
   TrendingUp,
   Ticket as TicketIcon,
-  Plus,
   CalendarDays,
   ArrowRight,
   Activity,
@@ -44,7 +43,6 @@ export default async function StudioDashboard() {
     });
   });
 
-  // Sort recent bookings across all events and grab the latest 5
   recentBookings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   const topRecentBookings = recentBookings.slice(0, 5);
 
@@ -64,23 +62,13 @@ export default async function StudioDashboard() {
         }}
       />
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-6 border-b border-slate-800/80">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            Organizer Studio
-          </h1>
-          <p className="text-slate-400 mt-1.5 text-sm sm:text-base">
-            Welcome back. Here is the live telemetry for your events.
-          </p>
-        </div>
-        <Link
-          href="/studio/events/new"
-          className="group flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-400 text-slate-950 font-black rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] hover:-translate-y-0.5 overflow-hidden relative"
-        >
-          <div className="absolute inset-0 w-full h-full bg-white/30 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-          <Plus className="w-5 h-5 relative" />
-          <span className="relative">Create Event</span>
-        </Link>
+      <div className="pb-6 border-b border-slate-800/80">
+        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+          Organizer Studio
+        </h1>
+        <p className="text-slate-400 mt-1.5 text-sm sm:text-base">
+          Welcome back. Here is the live telemetry for your events.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

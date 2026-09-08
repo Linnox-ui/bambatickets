@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 import "./globals.css";
+import SessionProvider from "../components/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,32 +68,34 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500/30 selection:text-cyan-50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-orange-500/30 selection:text-orange-50`}
       >
-        <NextTopLoader
-          color="#06b6d4"
-          initialPosition={0.08}
-          crawlSpeed={200}
-          height={3}
-          crawl={true}
-          showSpinner={false}
-          easing="ease"
-          speed={200}
-          shadow="0 0 10px #06b6d4, 0 0 5px #06b6d4"
-          zIndex={1600}
-        />
+        <SessionProvider>
+          <NextTopLoader
+            color="#f97316"
+            initialPosition={0.08}
+            crawlSpeed={200}
+            height={3}
+            crawl={true}
+            showSpinner={false}
+            easing="ease"
+            speed={200}
+            shadow="0 0 10px #f97316, 0 0 5px #f97316"
+            zIndex={1600}
+          />
 
-        <main className="flex-1 flex flex-col">{children}</main>
+          <main className="flex-1 flex flex-col">{children}</main>
 
-        <Toaster
-          position="top-right"
-          richColors
-          theme="dark"
-          closeButton
-          toastOptions={{
-            className: "font-sans",
-          }}
-        />
+          <Toaster
+            position="top-right"
+            richColors
+            theme="dark"
+            closeButton
+            toastOptions={{
+              className: "font-sans",
+            }}
+          />
+        </SessionProvider>
       </body>
     </html>
   );

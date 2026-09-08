@@ -17,7 +17,7 @@ import {
 interface DashboardLayoutProps {
   children: React.ReactNode;
   user: { name?: string | null; email?: string | null };
-  signOutAction: () => Promise<void>; // We pass the server action in as a prop!
+  signOutAction: () => Promise<void>;
 }
 
 export default function DashboardLayout({
@@ -38,11 +38,9 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden flex">
-      {/* Background Effects */}
       <div className="absolute top-[-20%] left-[-10%] w-125 h-125 bg-fuchsia-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-125 h-125 bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Mobile Navbar (Hidden on Desktop) */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-4 z-50">
         <div className="flex items-center gap-2">
           <Ticket className="w-6 h-6 text-fuchsia-500" />
@@ -61,8 +59,6 @@ export default function DashboardLayout({
           )}
         </button>
       </div>
-
-      {/* Sidebar (Desktop Fixed & Mobile Slide-out) */}
       <aside
         className={`
         fixed inset-y-0 left-0 z-40 w-64 bg-slate-900/60 backdrop-blur-xl border-r border-slate-800/60 transform transition-transform duration-300 ease-in-out flex flex-col
@@ -70,7 +66,6 @@ export default function DashboardLayout({
         md:translate-x-0 md:static md:h-screen
       `}
       >
-        {/* Sidebar Header (Desktop) */}
         <div className="h-16 hidden md:flex items-center gap-2 px-6 border-b border-slate-800/60 shrink-0">
           <Ticket className="w-6 h-6 text-fuchsia-500" />
           <span className="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-cyan-400 to-fuchsia-500">
@@ -78,7 +73,6 @@ export default function DashboardLayout({
           </span>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto mt-16 md:mt-0">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -87,7 +81,7 @@ export default function DashboardLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)} // Close menu on mobile click
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all font-medium text-sm ${
                   isActive
                     ? "bg-linear-to-r from-fuchsia-600/10 to-cyan-600/10 text-fuchsia-400 border border-fuchsia-500/20"
@@ -103,7 +97,6 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* User Profile & Logout */}
         <div className="p-4 border-t border-slate-800/60 shrink-0 bg-slate-900/20">
           <div className="flex items-center gap-3 px-3 py-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-linear-to-tr from-fuchsia-600 to-cyan-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shrink-0">
@@ -130,14 +123,12 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden pt-16 md:pt-0">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 z-10 relative">
           {children}
         </div>
       </main>
 
-      {/* Mobile Dark Overlay (Clicks to close sidebar) */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"

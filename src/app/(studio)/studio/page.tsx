@@ -18,7 +18,6 @@ export default async function StudioDashboard() {
     redirect("/login");
   }
 
-  // 1. Fetch all events by this organizer, including successful bookings
   const events = await prisma.event.findMany({
     where: { organizerId: session.user.id },
     include: {
@@ -30,7 +29,6 @@ export default async function StudioDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
-  // 2. Calculate Global Analytics
   let totalRevenue = 0;
   let totalTicketsSold = 0;
   const recentBookings: any[] = [];
@@ -52,7 +50,6 @@ export default async function StudioDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
-      {/* 🚀 CUSTOM ANIMATION FOR DASHBOARD LOAD */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -67,7 +64,6 @@ export default async function StudioDashboard() {
         }}
       />
 
-      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-6 border-b border-slate-800/80">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
@@ -87,9 +83,7 @@ export default async function StudioDashboard() {
         </Link>
       </div>
 
-      {/* ANALYTICS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Revenue Card */}
         <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-emerald-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:scale-110 transition-transform">
@@ -105,7 +99,6 @@ export default async function StudioDashboard() {
           </div>
         </div>
 
-        {/* Tickets Sold */}
         <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-orange-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform">
@@ -120,7 +113,6 @@ export default async function StudioDashboard() {
           </div>
         </div>
 
-        {/* Active Events */}
         <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-amber-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform">
@@ -136,9 +128,7 @@ export default async function StudioDashboard() {
         </div>
       </div>
 
-      {/* 🚀 PRIORITY REVERSAL: Quick Access is now main priority (col-span-2) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
-        {/* QUICK EVENT MANAGEMENT (Primary Focus) */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-white flex items-center gap-3">
@@ -204,7 +194,6 @@ export default async function StudioDashboard() {
           </div>
         </div>
 
-        {/* RECENT SALES FEED (Secondary Focus / Sidebar) */}
         <div className="lg:col-span-1 space-y-6">
           <h2 className="text-xl font-black text-white flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-emerald-500" />

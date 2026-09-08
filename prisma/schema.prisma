@@ -11,11 +11,28 @@ datasource db {
 // ------------------------------------------------------
 
 enum Role {
-  SUPER_ADMIN
-  ORGANIZER
-  STAFF
-  GATE_STAFF
-  CUSTOMER
+  SUPER_ADMIN // CEO / God Mode
+  SUPERVISOR // HQ Junior Staff / ICT
+  ORGANIZER // Event Creator
+  GATE_STAFF // Ticket Scanners at the door
+  CUSTOMER // Ticket Buyer
+}
+
+enum FeeBearer {
+  ATTENDEE // "Pass-on" Model: Attendee pays the 5.5% fee
+  ORGANIZER // "Absorb" Model: Organizer pays fee from ticket price
+}
+
+enum LogLevel {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 // ------------------------------------------------------
@@ -30,19 +47,37 @@ model User {
   lastName     String
   role         Role    @default(CUSTOMER)
 
-  // 🚀 Payout Configuration for Organizers
+  // 🚀 New: Phone and Email Verification fields
+  phoneNumber   String?   @unique
+  emailVerified DateTime? // Null means email is unverified
+
+  // 🚀 Future-Proofing: Dormant National ID Verification fields
+  nationalIdNumber String? @unique
+  isIdVerified     Boolean @default(false)
+
+  // Payout Configuration for Organizers
   payoutPhone   String? // M-Pesa number for receiving payouts
   bankName      String? // e.g. Equity Bank, KCB
   accountNumber String? // Bank account number
 
   // Relations
-  events Event[] // A user can organize many events
+  events   Event[] // A user can organize many events
+  bookings Booking[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+// 🚀 New: Secure tokens for Email Verification workflows
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Event {
@@ -54,15 +89,18 @@ model Event {
   imageUrl    String?
   isPublished Boolean  @default(false)
 
+  // 🚀 PRICING TOGGLE: Who pays the platform fee?
+  feeBearer FeeBearer @default(ATTENDEE)
+
   // Relations
   organizerId String
   organizer   User         @relation(fields: [organizerId], references: [id], onDelete: Cascade)
   ticketTiers TicketTier[] // An event can have many ticket tiers (VIP, Regular, etc.)
-
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
   bookings    Booking[]
   eventStaffs EventStaff[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("events")
 }
@@ -75,30 +113,24 @@ model TicketTier {
 
   // Relations
   eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  tickets   Ticket[]
 
   @@map("ticket_tiers")
 }
 
 // ------------------------------------------------------
-// PAYMENT & BOOKING ENUMS & MODELS
+// PAYMENT & BOOKING MODELS
 // ------------------------------------------------------
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
 
 model Booking {
   id              String        @id @default(uuid())
   reference       String        @unique
   amount          Float // Total amount paid by customer
-  platformFee     Float         @default(0.0) // Bamba Tickets cut (e.g. 5%)
+  platformFee     Float         @default(0.0) // Bamba Tickets cut (e.g. 5.5% + KES 30)
   organizerPayout Float         @default(0.0) // Net amount due to organizer
   status          PaymentStatus @default(PENDING)
   customerEmail   String
@@ -137,11 +169,33 @@ model Ticket {
 }
 
 model EventStaff {
-  id        String   @id @default(cuid())
-  eventId   String
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  name      String
-  email     String
-  pinCode   String // Secure 4-digit PIN for gate login
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  pinCode String // Secure 4-digit PIN for gate login
+
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
+
+  @@map("event_staff")
+}
+
+// ------------------------------------------------------
+// 🚀 BAMBA HQ: ICT PORTAL & SYSTEM LOGS
+// ------------------------------------------------------
+
+model SystemLog {
+  id         String   @id @default(cuid())
+  level      LogLevel @default(INFO)
+  message    String   @db.Text // @db.Text allows for super long error messages
+  stackTrace String?  @db.Text // Pinpoints the exact line of code that failed
+  path       String? // The URL/Endpoint where it happened (e.g., "/api/checkout")
+  resolved   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@map("system_logs")
 }

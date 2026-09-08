@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.bambatickets.com"),
   title: {
     default: "Bamba Tickets",
     template: "%s | Bamba Tickets",
@@ -47,6 +48,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bamba Tickets",
     description: "Secure your event passes instantly.",
+  },
+  alternates: {
+    canonical: "/",
   },
 };
 

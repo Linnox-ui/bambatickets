@@ -1,11 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Settings, Sparkles } from "lucide-react";
-import prisma from "../../../../../../lib/prisma"; // Adjust path if needed
-import { auth } from "../../../../../../auth"; // Adjust path if needed
-import EditEventForm from "../../../../../../components/EditEventForm"; // Adjust path to point to our new form
+import prisma from "../../../../../../lib/prisma";
+import { auth } from "../../../../../../auth";
+import EditEventForm from "../../../../../../components/EditEventForm";
 
-// 1. Loose typing to accommodate Next.js 15 Promise params safely
 interface EditEventPageProps {
   params: Promise<{
     id?: string;
@@ -14,11 +13,9 @@ interface EditEventPageProps {
 }
 
 export default async function EditEventPage({ params }: EditEventPageProps) {
-  // 2. Resolve the params object safely
   const resolvedParams = await params;
   const targetId = resolvedParams?.id || resolvedParams?.eventId;
 
-  // 3. BULLETPROOF GUARD: Immediate 404 if no ID
   if (!targetId) {
     notFound();
   }
@@ -28,7 +25,6 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     redirect("/login");
   }
 
-  // 4. Fetch the event securely WITH all required relations (Tiers & Bookings)
   const event = await prisma.event.findUnique({
     where: { id: targetId },
     include: {
@@ -44,20 +40,20 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     notFound();
   }
 
-  // Ensure this organizer actually owns this event
   if (event.organizerId !== session.user.id) {
     redirect("/studio");
   }
 
-  // Formating Date and Time for HTML inputs
+  // Safe Timezone Parsing (Avoids SSR Hydration Mismatches)
   const dateObj = new Date(event.date);
   const dateString = dateObj.toISOString().split("T")[0];
-  const timeString = dateObj.toTimeString().split(" ")[0].slice(0, 5);
+  const timeString = dateObj.toISOString().split("T")[1].slice(0, 5);
 
   const hasSales = event.bookings.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 animate-fade-in-up">
+    /* 🚀 FIX 1: Added px-4 sm:px-6 to give the page breathing room on mobile screens */
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-20 animate-fade-in-up">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -67,27 +63,26 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
         }}
       />
 
-      {/* PREMIUM HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8 pb-6 border-b border-slate-800/80">
+      {/* 🚀 FIX 2: Changed to flex-row for mobile so the back button sits beside the text, saving vertical space */}
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 mt-6 sm:mt-8 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-slate-800/80">
         <Link
           href={`/studio/events/${targetId}`}
-          className="p-3 bg-slate-900 border border-slate-800 rounded-2xl hover:bg-slate-800 hover:border-orange-500/50 transition-all group w-fit"
+          className="p-2.5 sm:p-3 bg-slate-900 border border-slate-800 rounded-xl sm:rounded-2xl hover:bg-slate-800 hover:border-orange-500/50 transition-all group w-fit shrink-0 mt-1 sm:mt-0"
         >
           <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" />
         </Link>
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest text-orange-500 mb-1.5">
+        <div className="flex-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-widest text-orange-500 mb-1">
             <Settings className="w-3.5 h-3.5" />
             Configuration Mode
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight flex flex-wrap items-center gap-2">
             Edit Details{" "}
-            <Sparkles className="w-6 h-6 text-orange-500 opacity-50" />
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 opacity-50 shrink-0" />
           </h1>
         </div>
       </div>
 
-      {/* The component we built that handles the actual editing */}
       <EditEventForm
         event={{
           id: event.id,

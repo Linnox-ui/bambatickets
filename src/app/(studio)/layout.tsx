@@ -17,7 +17,7 @@ export default async function StudioLayout({
   const user = {
     name: session.user.name,
     email: session.user.email,
-  };
+  }; 
 
   return <StudioShell user={user}>{children}</StudioShell>;
 }

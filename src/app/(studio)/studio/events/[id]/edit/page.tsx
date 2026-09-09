@@ -1,9 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Settings } from "lucide-react";
-import prisma from "../../../../../../lib/prisma";
-import { auth } from "../../../../../../auth";
-import EditEventForm from "../../../../../../components/EditEventForm";
+import { ArrowLeft, Settings, Sparkles } from "lucide-react";
+import prisma from "../../../../../../lib/prisma"; // Adjust path if needed
+import { auth } from "../../../../../../auth"; // Adjust path if needed
+import EditEventForm from "../../../../../../components/EditEventForm"; // Adjust path to point to our new form
 
 // 1. Loose typing to accommodate Next.js 15 Promise params safely
 interface EditEventPageProps {
@@ -14,73 +14,99 @@ interface EditEventPageProps {
 }
 
 export default async function EditEventPage({ params }: EditEventPageProps) {
-  // 2. Resolve the params object
+  // 2. Resolve the params object safely
   const resolvedParams = await params;
-
-  // 3. Check for both common dynamic folder naming conventions
   const targetId = resolvedParams?.id || resolvedParams?.eventId;
 
-  // 4. BULLETPROOF GUARD: If there is no ID, immediately 404 instead of crashing Prisma
+  // 3. BULLETPROOF GUARD: Immediate 404 if no ID
   if (!targetId) {
     notFound();
   }
 
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.user?.id || session.user.role !== "ORGANIZER") {
     redirect("/login");
   }
 
-  // 5. Fetch the event securely using our guaranteed string ID
+  // 4. Fetch the event securely WITH all required relations (Tiers & Bookings)
   const event = await prisma.event.findUnique({
     where: { id: targetId },
+    include: {
+      ticketTiers: true,
+      bookings: {
+        where: { status: "SUCCESS" },
+        select: { id: true },
+      },
+    },
   });
 
   if (!event) {
     notFound();
   }
 
+  // Ensure this organizer actually owns this event
   if (event.organizerId !== session.user.id) {
     redirect("/studio");
   }
 
+  // Formating Date and Time for HTML inputs
   const dateObj = new Date(event.date);
-  const dateString = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
-  const timeString = dateObj.toISOString().substring(11, 16); // HH:MM
+  const dateString = dateObj.toISOString().split("T")[0];
+  const timeString = dateObj.toTimeString().split(" ")[0].slice(0, 5);
+
+  const hasSales = event.bookings.length > 0;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* HEADER */}
-      <div className="flex items-center gap-4 mb-8">
+    <div className="max-w-4xl mx-auto pb-20 animate-fade-in-up">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `,
+        }}
+      />
+
+      {/* PREMIUM HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8 pb-6 border-b border-slate-800/80">
         <Link
           href={`/studio/events/${targetId}`}
-          className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shadow-sm"
+          className="p-3 bg-slate-900 border border-slate-800 rounded-2xl hover:bg-slate-800 hover:border-orange-500/50 transition-all group w-fit"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:text-orange-500 transition-colors" />
         </Link>
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-500 mb-1">
-            <Settings className="w-3.5 h-3.5 text-cyan-400" />
-            EVENT CONFIGURATION
+          <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest text-orange-500 mb-1.5">
+            <Settings className="w-3.5 h-3.5" />
+            Configuration Mode
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">
-            Edit Event Details
+          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-2">
+            Edit Details{" "}
+            <Sparkles className="w-6 h-6 text-orange-500 opacity-50" />
           </h1>
         </div>
       </div>
 
-      {/* FORM CONTAINER */}
-      <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl">
-        <EditEventForm
-          eventId={event.id}
-          initialData={{
-            title: event.title,
-            description: event.description || "",
-            location: event.location,
-            date: dateString,
-            time: timeString,
-          }}
-        />
-      </div>
+      {/* The component we built that handles the actual editing */}
+      <EditEventForm
+        event={{
+          id: event.id,
+          title: event.title,
+          description: event.description || "",
+          location: event.location,
+          dateString,
+          timeString,
+          imageUrl: event.imageUrl,
+          feeBearer: event.feeBearer as "ATTENDEE" | "ORGANIZER",
+          tiers: event.ticketTiers.map((t) => ({
+            id: t.id,
+            name: t.name,
+            price: t.price,
+            capacity: t.capacity,
+          })),
+          hasSales: hasSales,
+        }}
+      />
     </div>
   );
 }

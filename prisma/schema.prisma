@@ -6,21 +6,17 @@ datasource db {
   provider = "postgresql"
 }
 
-// ------------------------------------------------------
-// ENUMS
-// ------------------------------------------------------
-
 enum Role {
-  SUPER_ADMIN // CEO / God Mode
-  SUPERVISOR // HQ Junior Staff / ICT
-  ORGANIZER // Event Creator
-  GATE_STAFF // Ticket Scanners at the door
-  CUSTOMER // Ticket Buyer
+  SUPER_ADMIN
+  SUPERVISOR
+  ORGANIZER
+  GATE_STAFF
+  CUSTOMER
 }
 
 enum FeeBearer {
-  ATTENDEE // "Pass-on" Model: Attendee pays the 5.5% fee
-  ORGANIZER // "Absorb" Model: Organizer pays fee from ticket price
+  ATTENDEE
+  ORGANIZER
 }
 
 enum LogLevel {
@@ -35,42 +31,29 @@ enum PaymentStatus {
   FAILED
 }
 
-// ------------------------------------------------------
-// MODELS
-// ------------------------------------------------------
-
 model User {
-  id           String  @id @default(uuid())
-  email        String  @unique
-  passwordHash String?
-  firstName    String
-  lastName     String
-  role         Role    @default(CUSTOMER)
-
-  // 🚀 New: Phone and Email Verification fields
-  phoneNumber   String?   @unique
-  emailVerified DateTime? // Null means email is unverified
-
-  // 🚀 Future-Proofing: Dormant National ID Verification fields
-  nationalIdNumber String? @unique
-  isIdVerified     Boolean @default(false)
-
-  // Payout Configuration for Organizers
-  payoutPhone   String? // M-Pesa number for receiving payouts
-  bankName      String? // e.g. Equity Bank, KCB
-  accountNumber String? // Bank account number
-
-  // Relations
-  events   Event[] // A user can organize many events
-  bookings Booking[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String?
+  firstName           String
+  lastName            String
+  role                Role      @default(CUSTOMER)
+  phoneNumber         String?   @unique
+  emailVerified       DateTime?
+  nationalIdNumber    String?   @unique
+  isIdVerified        Boolean   @default(false)
+  payoutMethod        String?
+  payoutAccountName   String?
+  payoutAccountNumber String?
+  payoutBankName      String?
+  events              Event[]
+  bookings            Booking[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@map("users")
 }
 
-// 🚀 New: Secure tokens for Email Verification workflows
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -81,121 +64,92 @@ model VerificationToken {
 }
 
 model Event {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
   location    String
   date        DateTime
   imageUrl    String?
-  isPublished Boolean  @default(false)
-
-  // 🚀 PRICING TOGGLE: Who pays the platform fee?
-  feeBearer FeeBearer @default(ATTENDEE)
-
-  // Relations
+  isPublished Boolean      @default(false)
+  feeBearer   FeeBearer    @default(ATTENDEE)
   organizerId String
   organizer   User         @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  ticketTiers TicketTier[] // An event can have many ticket tiers (VIP, Regular, etc.)
+  ticketTiers TicketTier[]
   bookings    Booking[]
   eventStaffs EventStaff[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@map("events")
 }
 
 model TicketTier {
-  id       String @id @default(uuid())
-  name     String // e.g., "Early Bird", "VIP", "Regular"
-  price    Float // Price of the ticket
-  capacity Int // Total number of tickets available for this tier
-
-  // Relations
-  eventId String
-  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  tickets Ticket[]
-
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  capacity  Int
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("ticket_tiers")
 }
 
-// ------------------------------------------------------
-// PAYMENT & BOOKING MODELS
-// ------------------------------------------------------
-
 model Booking {
   id              String        @id @default(uuid())
   reference       String        @unique
-  amount          Float // Total amount paid by customer
-  platformFee     Float         @default(0.0) // Bamba Tickets cut (e.g. 5.5% + KES 30)
-  organizerPayout Float         @default(0.0) // Net amount due to organizer
+  amount          Float
+  platformFee     Float         @default(0.0)
+  organizerPayout Float         @default(0.0)
   status          PaymentStatus @default(PENDING)
   customerEmail   String
   customerName    String
-
-  // Relations
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  buyerId String? // Optional: if logged in user bought it
-  buyer   User?   @relation(fields: [buyerId], references: [id], onDelete: SetNull)
-
-  tickets Ticket[] // The actual issued admission tickets
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  eventId         String
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  buyerId         String?
+  buyer           User?         @relation(fields: [buyerId], references: [id], onDelete: SetNull)
+  tickets         Ticket[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@map("bookings")
 }
 
 model Ticket {
-  id         String  @id @default(uuid())
-  ticketCode String  @unique @default(uuid()) // Unique code for gate scanning
-  isUsed     Boolean @default(false) // Checked in at the gate
-
-  // Relations
-  bookingId String
-  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
-  tierId String
-  tier   TicketTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  id         String     @id @default(uuid())
+  ticketCode String     @unique @default(uuid())
+  isUsed     Boolean    @default(false)
+  bookingId  String
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tierId     String
+  tier       TicketTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
 
   @@map("tickets")
 }
 
 model EventStaff {
-  id      String @id @default(cuid())
-  name    String
-  email   String
-  pinCode String // Secure 4-digit PIN for gate login
-
-  // Relations
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  pinCode   String
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@map("event_staff")
 }
 
-// ------------------------------------------------------
-// 🚀 BAMBA HQ: ICT PORTAL & SYSTEM LOGS
-// ------------------------------------------------------
-
 model SystemLog {
   id         String   @id @default(cuid())
   level      LogLevel @default(INFO)
-  message    String   @db.Text // @db.Text allows for super long error messages
-  stackTrace String?  @db.Text // Pinpoints the exact line of code that failed
-  path       String? // The URL/Endpoint where it happened (e.g., "/api/checkout")
+  message    String   @db.Text
+  stackTrace String?  @db.Text
+  path       String?
   resolved   Boolean  @default(false)
-
-  createdAt DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   @@map("system_logs")
 }

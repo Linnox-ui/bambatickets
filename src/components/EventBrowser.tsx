@@ -165,8 +165,9 @@ export default function EventBrowser({
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       ) : (
-                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600 font-mono text-xs">
-                          BAMBA
+                        <div className="w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center group-hover:scale-105 transition-transform duration-500 relative">
+                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.4)_0,transparent_70%)]" />
+                          <Ticket className="w-12 h-12 text-slate-700 relative z-10 group-hover:text-orange-500/50 transition-colors" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent opacity-90" />

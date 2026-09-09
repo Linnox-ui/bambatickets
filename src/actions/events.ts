@@ -4,20 +4,21 @@ import prisma from "../lib/prisma";
 import { auth } from "../auth";
 import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
+import { FeeBearer } from "@prisma/client";
 
-// Cloudinary configuration (picks up CLOUDINARY_URL from .env automatically)
+// Cloudinary configuration
 cloudinary.config({
   secure: true,
 });
 
 // ==========================================
-// 1. CREATE EVENT (With Cloudinary)
+// 1. CREATE EVENT
 // ==========================================
 export async function createEvent(formData: FormData) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
-      return { error: "You must be logged in to create an event." };
+    if (!session?.user?.id || session.user.role !== "ORGANIZER") {
+      return { error: "Unauthorized access. You must be an organizer." };
     }
 
     const title = formData.get("title") as string;
@@ -25,6 +26,7 @@ export async function createEvent(formData: FormData) {
     const location = formData.get("location") as string;
     const dateString = formData.get("date") as string;
     const timeString = formData.get("time") as string;
+    const feeBearer = formData.get("feeBearer") as FeeBearer;
     const tiersJson = formData.get("tiers") as string;
     const imageFile = formData.get("imageFile") as File;
 
@@ -65,21 +67,22 @@ export async function createEvent(formData: FormData) {
     }
 
     // Save to Neon Postgres
-    await prisma.event.create({
+    const newEvent = await prisma.event.create({
       data: {
         title,
         description,
         location,
         date: eventDate,
         imageUrl,
+        feeBearer: feeBearer || "ATTENDEE",
         isPublished: true,
         organizerId: session.user.id,
         ticketTiers: {
           create: parsedTiers.map(
-            (tier: { name: string; price: string; capacity: string }) => ({
+            (tier: { name: string; price: number; capacity: number }) => ({
               name: tier.name,
-              price: parseFloat(tier.price) || 0,
-              capacity: parseInt(tier.capacity, 10) || 100,
+              price: tier.price || 0,
+              capacity: tier.capacity || 100,
             }),
           ),
         },
@@ -88,7 +91,7 @@ export async function createEvent(formData: FormData) {
 
     revalidatePath("/");
     revalidatePath("/studio");
-    return { success: "Event published successfully!" };
+    return { success: "Event published successfully!", eventId: newEvent.id };
   } catch (error) {
     console.error("Server Action Error in createEvent:", error);
     return { error: "An error occurred while creating the event." };
@@ -111,7 +114,6 @@ export async function deleteEvent(eventId: string) {
       return { error: "Unauthorized or event not found." };
     }
 
-    // 🚀 SECURITY CHECK: Are there any sold tickets?
     const soldTicketsCount = await prisma.booking.count({
       where: { eventId, status: "SUCCESS" },
     });
@@ -119,12 +121,11 @@ export async function deleteEvent(eventId: string) {
     if (soldTicketsCount > 0) {
       return {
         error:
-          "Cannot delete this event because tickets have already been sold. Please cancel the event and refund buyers first.",
+          "Cannot delete this event because tickets have already been sold. Please cancel and refund buyers first.",
       };
     }
 
     await prisma.$transaction(async (tx) => {
-      // Safe to delete everything since no real sales happened
       const bookings = await tx.booking.findMany({
         where: { eventId },
         select: { id: true },
@@ -169,7 +170,9 @@ export async function updateEvent(eventId: string, formData: FormData) {
     const description = formData.get("description") as string;
     const dateStr = formData.get("date") as string;
     const timeStr = formData.get("time") as string;
+    const feeBearer = formData.get("feeBearer") as FeeBearer; // 🚀 ADDED THIS
     const tiersJson = formData.get("tiers") as string;
+    const imageFile = formData.get("imageFile") as File | null; // 🚀 ADDED THIS
 
     if (!title || !location || !dateStr || !timeStr || !tiersJson) {
       return { error: "Please fill out all required fields." };
@@ -181,12 +184,35 @@ export async function updateEvent(eventId: string, formData: FormData) {
 
     const eventDate = new Date(`${dateStr}T${timeStr}:00`);
 
-    // 🚀 USE A TRANSACTION TO SAFELY UPDATE EVENT AND TIERS
+    // 🚀 ADDED IMAGE UPLOAD LOGIC FOR UPDATES
+    let imageUrl = event.imageUrl; // keep old image by default
+    if (imageFile && imageFile.size > 0) {
+      if (imageFile.size > 10 * 1024 * 1024) {
+        return { error: "File size exceeds the 10MB limit." };
+      }
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64Data = buffer.toString("base64");
+      const fileUri = `data:${imageFile.type};base64,${base64Data}`;
+
+      const uploadResponse = await cloudinary.uploader.upload(fileUri, {
+        folder: "bamba_studio",
+      });
+      imageUrl = uploadResponse.secure_url;
+    }
+
     await prisma.$transaction(async (tx) => {
-      // 1. Update basic event details
+      // 🚀 INCLUDED FEE BEARER & IMAGE URL IN THE UPDATE QUERY
       await tx.event.update({
         where: { id: eventId },
-        data: { title, location, description, date: eventDate },
+        data: {
+          title,
+          location,
+          description,
+          date: eventDate,
+          feeBearer: feeBearer || event.feeBearer,
+          imageUrl: imageUrl,
+        },
       });
 
       const incomingTierIds = parsedTiers.map((t: any) => t.id).filter(Boolean);
@@ -194,7 +220,6 @@ export async function updateEvent(eventId: string, formData: FormData) {
         where: { eventId },
       });
 
-      // 2. Delete removed tiers (Only if they have NO sold tickets)
       for (const existingTier of existingTiers) {
         if (!incomingTierIds.includes(existingTier.id)) {
           const soldCount = await tx.ticket.count({
@@ -210,7 +235,6 @@ export async function updateEvent(eventId: string, formData: FormData) {
         }
       }
 
-      // 3. Update existing tiers and Create new ones
       for (const tier of parsedTiers) {
         if (tier.id) {
           await tx.ticketTier.update({
@@ -239,7 +263,6 @@ export async function updateEvent(eventId: string, formData: FormData) {
     return { success: "Event updated successfully!" };
   } catch (error: any) {
     console.error("Failed to update event:", error);
-    // Return the specific error message if it's our custom tier deletion error
     return { error: error.message || "Failed to update event." };
   }
 }

@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Activity,
   Banknote,
+  Plus,
 } from "lucide-react";
 
 export default async function StudioDashboard() {
@@ -133,35 +134,51 @@ export default async function StudioDashboard() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {events.slice(0, 6).map((event) => (
               <Link
                 key={event.id}
                 href={`/studio/events/${event.id}`}
-                className="block p-5 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-2xl hover:border-orange-500/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 group"
+                className="block bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 group flex-col h-full"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-white leading-snug pr-4 group-hover:text-orange-400 transition-colors">
-                    {event.title}
-                  </h3>
-                  <div className="w-8 h-8 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 group-hover:bg-orange-500 group-hover:border-orange-400 transition-colors">
-                    <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-slate-950 transition-colors" />
+                <div className="h-36 w-full relative overflow-hidden bg-slate-950">
+                  {event.imageUrl ? (
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center group-hover:scale-105 transition-transform duration-500 relative">
+                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.4)_0,transparent_70%)]" />
+                      <TicketIcon className="w-10 h-10 text-slate-700 relative z-10 group-hover:text-orange-500/50 transition-colors" />
+                    </div>
+                  )}
+
+                  <div className="absolute top-3 right-3 z-20">
+                    <span
+                      className={`px-2.5 py-1 rounded-md border backdrop-blur-md text-[10px] font-mono font-bold uppercase tracking-wider ${
+                        event.isPublished
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                          : "bg-slate-900/80 text-slate-400 border-slate-700"
+                      }`}
+                    >
+                      {event.isPublished ? "LIVE" : "DRAFT"}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-slate-500">
-                    {new Date(event.date).toLocaleDateString()}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-md border ${
-                      event.isPublished
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-slate-800 text-slate-400 border-slate-700"
-                    }`}
-                  >
-                    {event.isPublished ? "LIVE" : "DRAFT"}
-                  </span>
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="font-bold text-white leading-snug pr-2 group-hover:text-orange-400 transition-colors line-clamp-2 mb-4">
+                    {event.title}
+                  </h3>
+
+                  <div className="flex items-center justify-between text-xs font-mono mt-auto pt-4 border-t border-slate-800/60">
+                    <span className="text-slate-400">
+                      {new Date(event.date).toLocaleDateString()}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-orange-500 transition-colors" />
+                  </div>
                 </div>
               </Link>
             ))}
@@ -173,9 +190,9 @@ export default async function StudioDashboard() {
                 </p>
                 <Link
                   href="/studio/events/new"
-                  className="inline-block mt-4 px-4 py-2 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-xl transition-colors"
                 >
-                  Create your first event
+                  <Plus className="w-4 h-4" /> Create First Event
                 </Link>
               </div>
             )}

@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   User,
+  Wallet,
 } from "lucide-react";
 
 interface StudioShellProps {
@@ -52,6 +53,12 @@ export default function StudioShell({ children, user }: StudioShellProps) {
       href: "/studio/events/new",
       icon: PlusCircle,
       color: "text-amber-400",
+    },
+    {
+      name: "Payouts",
+      href: "/studio/payouts",
+      icon: Wallet,
+      color: "text-emerald-400",
     },
   ];
 

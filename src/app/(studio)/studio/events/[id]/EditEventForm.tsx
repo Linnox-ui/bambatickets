@@ -6,10 +6,13 @@ import {
   CalendarDays,
   MapPin,
   Loader2,
-  Save,
   Trash2,
   AlertTriangle,
   Plus,
+  AlignLeft,
+  Ticket,
+  Wallet,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 import { updateEvent, deleteEvent } from "../../../../../actions/events";
@@ -23,6 +26,7 @@ interface EditEventFormProps {
     dateString: string;
     timeString: string;
     imageUrl: string | null;
+    feeBearer: "ATTENDEE" | "ORGANIZER";
     tiers: { id?: string; name: string; price: number; capacity: number }[];
     hasSales: boolean;
   };
@@ -38,6 +42,9 @@ export default function EditEventForm({ event }: EditEventFormProps) {
   const [location, setLocation] = useState(event.location);
   const [date, setDate] = useState(event.dateString);
   const [time, setTime] = useState(event.timeString);
+  const [feeBearer, setFeeBearer] = useState<"ATTENDEE" | "ORGANIZER">(
+    event.feeBearer,
+  );
 
   // Load initial tiers from database
   const [tiers, setTiers] = useState(event.tiers);
@@ -84,7 +91,8 @@ export default function EditEventForm({ event }: EditEventFormProps) {
     formData.append("location", location);
     formData.append("date", date);
     formData.append("time", time);
-    formData.append("tiers", JSON.stringify(tiers)); // Send tiers to backend
+    formData.append("feeBearer", feeBearer);
+    formData.append("tiers", JSON.stringify(tiers));
 
     const result = await updateEvent(event.id, formData);
 
@@ -131,20 +139,18 @@ export default function EditEventForm({ event }: EditEventFormProps) {
 
   return (
     <div className="space-y-8">
-      {/* UPDATE FORM */}
-      <form
-        onSubmit={handleUpdate}
-        className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-8"
-      >
+      <form onSubmit={handleUpdate} className="space-y-8">
         {/* BASIC DETAILS */}
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-4">
-            <CalendarDays className="w-5 h-5 text-cyan-400" /> Basic Details
+        <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
+
+          <h2 className="text-lg font-black text-white flex items-center gap-2 border-b border-slate-800 pb-4">
+            <CalendarDays className="w-5 h-5 text-orange-500" /> Basic Details
           </h2>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1.5">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 Event Title
               </label>
               <input
@@ -153,39 +159,47 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                 disabled={isSubmitting || isDeleting}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white focus:border-cyan-500 outline-none transition-all"
+                className="w-full bg-slate-950 border border-slate-800 text-white text-lg font-bold rounded-xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all shadow-inner disabled:opacity-50"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="sm:col-span-1 space-y-2">
+                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                   Date
                 </label>
-                <input
-                  type="date"
-                  required
-                  disabled={isSubmitting || isDeleting}
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white focus:border-cyan-500 scheme-dark outline-none"
-                />
+                <div className="relative">
+                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <input
+                    type="date"
+                    required
+                    disabled={isSubmitting || isDeleting}
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
+                  />
+                </div>
               </div>
-              <div className="sm:col-span-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1.5">
+
+              <div className="sm:col-span-1 space-y-2">
+                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                   Time
                 </label>
-                <input
-                  type="time"
-                  required
-                  disabled={isSubmitting || isDeleting}
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white focus:border-cyan-500 scheme-dark outline-none"
-                />
+                <div className="relative">
+                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <input
+                    type="time"
+                    required
+                    disabled={isSubmitting || isDeleting}
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
+                  />
+                </div>
               </div>
-              <div className="sm:col-span-1">
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1.5">
+
+              <div className="sm:col-span-1 space-y-2">
+                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                   Location
                 </label>
                 <div className="relative">
@@ -198,41 +212,44 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     disabled={isSubmitting || isDeleting}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white focus:border-cyan-500 outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner disabled:opacity-50"
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1.5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 Description
               </label>
-              <textarea
-                required
-                disabled={isSubmitting || isDeleting}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-white focus:border-cyan-500 resize-none outline-none"
-              />
+              <div className="relative">
+                <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-slate-500" />
+                <textarea
+                  required
+                  disabled={isSubmitting || isDeleting}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner resize-none disabled:opacity-50"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* TICKET TIERS SECTION */}
-        <div className="space-y-6 pt-6 border-t border-slate-800">
+        <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-fuchsia-400" /> Ticket Tiers
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <Ticket className="w-5 h-5 text-amber-400" /> Ticket Tiers
             </h2>
             <button
               type="button"
               disabled={isSubmitting || isDeleting}
               onClick={addTier}
-              className="text-sm font-bold text-fuchsia-400 hover:text-fuchsia-300 bg-fuchsia-500/10 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
             >
-              + Add Tier
+              <Plus className="w-3.5 h-3.5" /> Add Tier
             </button>
           </div>
 
@@ -240,10 +257,10 @@ export default function EditEventForm({ event }: EditEventFormProps) {
             {tiers.map((tier, index) => (
               <div
                 key={index}
-                className="flex flex-col sm:flex-row gap-4 p-4 bg-slate-950 border border-slate-800 rounded-2xl relative group"
+                className="flex flex-col sm:flex-row gap-4 p-5 bg-slate-950 border border-slate-800 rounded-2xl relative group focus-within:border-orange-500/50 transition-all"
               >
                 <div className="flex-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                     Tier Name
                   </label>
                   <input
@@ -252,11 +269,12 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                     disabled={isSubmitting}
                     value={tier.name}
                     onChange={(e) => updateTier(index, "name", e.target.value)}
-                    className="w-full px-3 py-2 bg-transparent border-b border-slate-700 text-white focus:border-fuchsia-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:border-orange-500 outline-none transition-all disabled:opacity-50 text-sm"
                   />
                 </div>
-                <div className="w-full sm:w-32">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+
+                <div className="w-full sm:w-36">
+                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                     Price (KES)
                   </label>
                   <input
@@ -272,11 +290,12 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                         parseFloat(e.target.value) || 0,
                       )
                     }
-                    className="w-full px-3 py-2 bg-transparent border-b border-slate-700 text-white focus:border-fuchsia-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:border-orange-500 outline-none transition-all disabled:opacity-50 text-sm"
                   />
                 </div>
+
                 <div className="w-full sm:w-32">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                     Capacity
                   </label>
                   <input
@@ -292,15 +311,16 @@ export default function EditEventForm({ event }: EditEventFormProps) {
                         parseInt(e.target.value) || 1,
                       )
                     }
-                    className="w-full px-3 py-2 bg-transparent border-b border-slate-700 text-white focus:border-fuchsia-500 outline-none transition-all"
+                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:border-orange-500 outline-none transition-all disabled:opacity-50 text-sm"
                   />
                 </div>
+
                 {tiers.length > 1 && (
                   <button
                     type="button"
                     disabled={isSubmitting}
                     onClick={() => removeTier(index)}
-                    className="absolute -top-2 -right-2 sm:static sm:mt-5 p-2 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all"
+                    className="absolute -top-3 -right-3 sm:static sm:mt-6 p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -308,21 +328,69 @@ export default function EditEventForm({ event }: EditEventFormProps) {
               </div>
             ))}
           </div>
+
+          {/* EDIT FEE BEARER */}
+          <div className="pt-4 mt-6 border-t border-slate-800/80">
+            <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+              <Wallet className="w-3.5 h-3.5" /> Ticketing Fee Structure
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                type="button"
+                disabled={isSubmitting || isDeleting}
+                onClick={() => setFeeBearer("ATTENDEE")}
+                className={`p-4 rounded-xl border text-left transition-all disabled:opacity-50 ${
+                  feeBearer === "ATTENDEE"
+                    ? "bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.1)]"
+                    : "bg-slate-950 border-slate-800 hover:border-slate-700"
+                }`}
+              >
+                <p
+                  className={`font-bold text-sm ${feeBearer === "ATTENDEE" ? "text-orange-400" : "text-white"}`}
+                >
+                  Pass fee to buyer
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Attendees pay the platform fee on top of ticket price.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                disabled={isSubmitting || isDeleting}
+                onClick={() => setFeeBearer("ORGANIZER")}
+                className={`p-4 rounded-xl border text-left transition-all disabled:opacity-50 ${
+                  feeBearer === "ORGANIZER"
+                    ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                    : "bg-slate-950 border-slate-800 hover:border-slate-700"
+                }`}
+              >
+                <p
+                  className={`font-bold text-sm ${feeBearer === "ORGANIZER" ? "text-emerald-400" : "text-white"}`}
+                >
+                  Absorb the fee
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  The platform fee is deducted from your final payout.
+                </p>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-end pt-6 border-t border-slate-800">
+        <div className="flex justify-end">
           <button
             type="submit"
             disabled={isSubmitting || isDeleting}
-            className="flex items-center gap-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl transition-all shadow-lg disabled:opacity-70"
+            className="w-full sm:w-auto px-10 py-4 bg-linear-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] active:scale-95 disabled:opacity-50 text-xs tracking-wider uppercase flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" /> Saving...
+                <Loader2 className="w-4 h-4 animate-spin" /> Saving...
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" /> Save Changes
+                <Save className="w-4 h-4" /> Save Changes
               </>
             )}
           </button>
@@ -331,24 +399,24 @@ export default function EditEventForm({ event }: EditEventFormProps) {
 
       {/* DANGER ZONE */}
       <div
-        className={`border rounded-3xl p-6 sm:p-8 ${event.hasSales ? "bg-slate-900/40 border-slate-800" : "bg-rose-950/20 border-rose-900/50"}`}
+        className={`border rounded-3xl p-6 sm:p-10 shadow-2xl ${event.hasSales ? "bg-slate-900/60 border-slate-800/80" : "bg-red-950/20 border-red-900/50"}`}
       >
         <h2
-          className={`text-xl font-bold flex items-center gap-2 mb-2 ${event.hasSales ? "text-slate-400" : "text-rose-500"}`}
+          className={`text-xl font-black flex items-center gap-2 mb-2 ${event.hasSales ? "text-slate-400" : "text-red-500"}`}
         >
           <AlertTriangle className="w-5 h-5" /> Danger Zone
         </h2>
 
         {event.hasSales ? (
-          <p className="text-amber-500/80 text-sm mb-6">
+          <p className="text-amber-500/80 text-sm mb-6 max-w-2xl">
             <strong>Action Locked:</strong> You cannot delete this event because
-            tickets have already been sold. Please contact support or cancel the
-            event and issue refunds first.
+            tickets have already been sold. Please cancel the event and issue
+            refunds first to unlock deletion.
           </p>
         ) : (
-          <p className="text-slate-400 text-sm mb-6">
+          <p className="text-slate-400 text-sm mb-6 max-w-2xl">
             Deleting this event will permanently remove it and all associated
-            ticket tiers. This action cannot be undone.
+            ticket tiers from the database. This action cannot be undone.
           </p>
         )}
 
@@ -357,17 +425,17 @@ export default function EditEventForm({ event }: EditEventFormProps) {
           disabled={isSubmitting || isDeleting || event.hasSales}
           className={`flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all ${
             event.hasSales
-              ? "bg-slate-800 text-slate-500 cursor-not-allowed opacity-50"
-              : "bg-rose-600/20 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/50 hover:border-rose-600"
+              ? "bg-slate-950 text-slate-600 border border-slate-800 cursor-not-allowed"
+              : "bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/30 shadow-inner"
           }`}
         >
           {isDeleting ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" /> Deleting...
+              <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
             </>
           ) : (
             <>
-              <Trash2 className="w-5 h-5" /> Delete Event
+              <Trash2 className="w-4 h-4" /> Delete Event
             </>
           )}
         </button>

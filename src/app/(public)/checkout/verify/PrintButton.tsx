@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { Printer } from "lucide-react";
 
 export default function PrintButton() {
   return (
     <button
       onClick={() => window.print()}
-      className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(8,145,178,0.4)] flex items-center gap-2"
+      className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold rounded-xl text-xs transition-all shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest font-mono"
     >
-      Save / Print Passes <ArrowRight className="w-4 h-4" />
+      <Printer className="w-4 h-4 text-orange-500" /> Save / Print Passes
     </button>
   );
 }

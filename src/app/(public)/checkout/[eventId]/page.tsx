@@ -186,7 +186,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />

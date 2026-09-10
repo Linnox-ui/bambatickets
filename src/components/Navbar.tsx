@@ -23,7 +23,10 @@ export default function Navbar({
   onSearchChange,
 }: NavbarProps) {
   const router = useRouter();
-  const { data: session } = useSession();
+
+  const { data: session, status } = useSession();
+  const isLoading = status === "loading";
+
   const [taps, setTaps] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -107,8 +110,13 @@ export default function Navbar({
           </div>
         </div>
 
-        <div className="order-2 sm:order-3 flex items-center gap-3 sm:gap-4 shrink-0 ml-auto sm:ml-0">
-          {!session ? (
+        <div className="order-2 sm:order-3 flex items-center gap-3 sm:gap-4 shrink-0 ml-auto sm:ml-0 min-h-10">
+          {isLoading ? (
+            <div className="flex items-center gap-3">
+              <div className="hidden lg:block w-32 h-9 bg-slate-800/50 rounded-full animate-pulse" />
+              <div className="w-24 h-9 sm:h-10 bg-orange-500/20 rounded-full animate-pulse" />
+            </div>
+          ) : !session ? (
             <>
               <Link
                 href="/studio"
@@ -148,6 +156,7 @@ export default function Navbar({
                 <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-orange-400 transition-colors relative z-10" />
               </div>
+
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="p-2 sm:p-2.5 text-slate-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-500/10 shrink-0"

@@ -34,10 +34,6 @@ export const metadata: Metadata = {
     "live events",
   ],
   authors: [{ name: "Bamba Tickets" }],
-  icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
-  },
   openGraph: {
     title: "Bamba Tickets",
     description: "Discover, book, and manage premium event tickets seamlessly.",

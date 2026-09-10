@@ -16,6 +16,7 @@ import {
   UserCheck,
   Zap,
   LogOut,
+  ScanLine,
 } from "lucide-react";
 import {
   verifyGateStaffPin,
@@ -51,11 +52,11 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [manualCode, setManualCode] = useState("");
 
-  // 🚀 World-Class Additions: Shift metrics & Recent scans log
   const [shiftCount, setShiftCount] = useState(0);
   const [recentScans, setRecentScans] = useState<RecentScan[]>([]);
 
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const isScanningRef = useRef(true);
 
   useEffect(() => {
     checkGateSession(eventId).then((res) => {
@@ -73,15 +74,21 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
       if (!scannerRef.current) {
         const scanner = new Html5QrcodeScanner(
           "gate-reader",
-          { fps: 15, qrbox: { width: 260, height: 260 } },
+          {
+            fps: 15,
+            qrbox: { width: 260, height: 260 },
+            videoConstraints: {
+              facingMode: "environment",
+            },
+          },
           false,
         );
 
-        let isScanning = true;
+        isScanningRef.current = true;
 
         async function onScanSuccess(decodedText: string) {
-          if (!isScanning || isProcessing) return;
-          isScanning = false;
+          if (!isScanningRef.current || isProcessing) return;
+          isScanningRef.current = false;
           setIsProcessing(true);
           setScanResult(null);
 
@@ -119,7 +126,7 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
           time: timeStr,
           success: true,
         },
-        ...prev.slice(0, 4), // Keep last 5 scans
+        ...prev.slice(0, 4),
       ]);
     } else {
       setRecentScans((prev) => [
@@ -153,20 +160,14 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
   }
 
   const handleLogout = async () => {
-    // 1. Clear camera scanner hardware if active
     if (scannerRef.current) {
       try {
         await scannerRef.current.clear();
-      } catch (e) {
-        // Suppress cleanup errors
-      }
+      } catch (e) {}
       scannerRef.current = null;
     }
 
-    // 2. Destroy server session cookie
     await logoutGateStaff(eventId);
-
-    // 3. Reset local states and reload
     setIsAuthenticated(false);
     setStaffName("");
     setShiftCount(0);
@@ -176,6 +177,7 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
 
   const handleReset = async () => {
     setScanResult(null);
+    isScanningRef.current = true;
     if (scannerRef.current) {
       try {
         scannerRef.current.resume();
@@ -199,7 +201,7 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
   if (isLoadingSession) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
       </div>
     );
   }
@@ -207,49 +209,59 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
   // 1. PIN LOGIN SCREEN
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 text-center">
-          <div className="w-16 h-16 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl flex items-center justify-center mx-auto text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
-            <Lock className="w-8 h-8" />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in-up">
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }`,
+          }}
+        />
+
+        <div className="max-w-md w-full bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto shadow-inner relative z-10">
+            <Lock className="w-6 h-6 text-orange-500" />
           </div>
-          <div>
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest block mb-1">
+          <div className="relative z-10">
+            <span className="text-[10px] font-mono text-orange-500 uppercase tracking-widest block mb-1 font-bold">
               Gatekeeper Terminal
             </span>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Enter Security PIN
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Access Control
             </h1>
-            <p className="text-slate-400 text-xs mt-1">
-              Authorized gate officers only. Enter your assigned access PIN.
+            <p className="text-slate-400 text-xs mt-2">
+              Enter your assigned staff PIN to unlock the scanner.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4 relative z-10">
             <input
               type="password"
               required
               maxLength={6}
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
               placeholder="••••"
-              className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-center text-3xl font-mono tracking-[0.5em] focus:border-cyan-500 outline-none transition-all shadow-inner"
+              className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-center text-3xl font-mono tracking-[0.5em] focus:border-orange-500 outline-none transition-all shadow-inner placeholder:tracking-[0.5em]"
             />
 
             {errorMsg && (
-              <p className="text-rose-400 text-xs font-semibold bg-rose-500/10 border border-rose-500/20 py-2.5 rounded-xl">
+              <p className="text-red-400 text-xs font-bold bg-red-500/10 border border-red-500/20 py-3 rounded-xl">
                 {errorMsg}
               </p>
             )}
 
             <button
               type="submit"
-              disabled={isLoggingIn}
-              className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-2xl transition-all shadow-[0_0_25px_rgba(8,145,178,0.4)] text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={isLoggingIn || pin.length < 4}
+              className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black tracking-widest uppercase rounded-xl text-xs transition-all shadow-[0_0_15px_rgba(249,115,22,0.3)] disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95"
             >
               {isLoggingIn ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "Authenticate & Open Gate"
+                "Authenticate Gate"
               )}
             </button>
           </form>
@@ -260,18 +272,48 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
 
   // 2. WORLD-CLASS SCANNER TERMINAL
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 pb-24">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 pb-24 animate-fade-in-up">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes laserScan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
+        }
+        .animate-laser { animation: laserScan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+        @keyframes popIn {
+          0% { transform: scale(0.9); opacity: 0; }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Overriding HTML5 Qrcode Default UI */
+        #gate-reader { border: none !important; border-radius: 1rem; overflow: hidden; width: 100%; }
+        #gate-reader video { object-fit: cover !important; border-radius: 0.75rem; }
+        #gate-reader__dashboard_section_csr span { color: #fff !important; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+        #gate-reader__dashboard_section_csr button { background-color: #f97316 !important; color: #fff !important; border: none !important; border-radius: 0.5rem !important; padding: 0.5rem 1rem !important; font-weight: bold !important; cursor: pointer; margin-top: 10px; }
+      `,
+        }}
+      />
+
       <div className="max-w-xl mx-auto space-y-6">
         {/* TOP STATUS BAR */}
-        <div className="flex items-center justify-between bg-slate-900/90 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl shadow-xl">
+        <div className="flex items-center justify-between bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl shadow-xl">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-              <Camera className="w-5 h-5" />
+            <div className="w-10 h-10 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center text-orange-500 shadow-inner">
+              <ScanLine className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest font-bold">
                   Live Gate Active
                 </span>
               </div>
@@ -281,51 +323,134 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-rose-500/20 hover:border-rose-500/40 text-slate-300 hover:text-rose-400 text-xs font-bold rounded-xl border border-slate-700 transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-950 hover:bg-red-500/10 hover:border-red-500/30 text-slate-400 hover:text-red-400 text-[10px] uppercase tracking-widest font-bold rounded-xl border border-slate-800 transition-all shadow-inner"
           >
-            <LogOut className="w-3.5 h-3.5" /> Lock Gate
+            <LogOut className="w-3.5 h-3.5" /> Lock
           </button>
         </div>
 
         {/* SHIFT METRICS COUNTER BAR */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3">
-            <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400">
+          <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500">
               <UserCheck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+              <p className="text-[9px] font-mono text-slate-500 uppercase tracking-wider font-bold">
                 Processed By You
               </p>
-              <p className="text-2xl font-black text-cyan-400">{shiftCount}</p>
+              <p className="text-2xl font-black text-amber-500">{shiftCount}</p>
             </div>
           </div>
 
-          <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3">
-            <div className="p-2.5 bg-fuchsia-500/10 border border-fuchsia-500/20 rounded-xl text-fuchsia-400">
+          <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3">
+            <div className="p-2.5 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-500">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+              <p className="text-[9px] font-mono text-slate-500 uppercase tracking-wider font-bold">
                 Terminal Status
               </p>
-              <p className="text-sm font-bold text-fuchsia-400 mt-1">
-                High Speed
+              <p className="text-sm font-bold text-orange-400 mt-1">
+                Optimized
               </p>
             </div>
           </div>
         </div>
 
         {/* SCANNER VIEWPORT CARD */}
-        <div className="bg-slate-900/90 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6">
-          <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 p-2 shadow-inner">
-            <div id="gate-reader" className="w-full"></div>
+        <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
+
+          {/* 🚀 CAMERA VIEWPORT WITH OVERLAYS */}
+          <div className="relative overflow-hidden rounded-2xl border-2 border-slate-800 bg-slate-950 p-1 min-h-75 sm:min-h-100 flex flex-col justify-center shadow-inner">
+            {/* Base Camera Feed */}
+            <div id="gate-reader" className="w-full relative z-10"></div>
+
+            {/* Holographic Laser Animation (Active only when searching) */}
+            {!scanResult && !isProcessing && (
+              <div className="absolute inset-0 z-20 pointer-events-none rounded-2xl overflow-hidden">
+                <div className="absolute left-0 right-0 h-1 bg-amber-500 shadow-[0_0_20px_rgba(249,115,22,1)] animate-laser" />
+                <div
+                  className="absolute inset-0 bg-linear-to-b from-transparent via-amber-500/5 to-transparent opacity-50 animate-laser"
+                  style={{ height: "20%" }}
+                />
+              </div>
+            )}
+
+            {/* Processing Overlay */}
+            {isProcessing && !scanResult && (
+              <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-amber-500">
+                <Loader2 className="w-12 h-12 animate-spin mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]" />
+                <p className="text-xs font-mono font-bold uppercase tracking-widest animate-pulse">
+                  Decrypting Ticket...
+                </p>
+              </div>
+            )}
+
+            {/* 🚀 BEAUTIFUL RESULT OVERLAY ON TOP OF CAMERA */}
+            {scanResult && (
+              <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+                <div
+                  className={`w-full max-w-sm p-6 sm:p-8 rounded-3xl border-2 animate-pop-in shadow-2xl flex flex-col items-center text-center space-y-4 ${
+                    scanResult.success
+                      ? "bg-emerald-950/95 border-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.3)]"
+                      : "bg-red-950/95 border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.3)]"
+                  }`}
+                >
+                  {scanResult.success ? (
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-400 drop-shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                      <XCircle className="w-10 h-10 text-red-400 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
+                    </div>
+                  )}
+
+                  <h2
+                    className={`text-2xl font-black tracking-tight ${scanResult.success ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {scanResult.message}
+                  </h2>
+
+                  {scanResult.success && scanResult.ticketDetails && (
+                    <div className="w-full pt-4 mt-2 border-t border-emerald-500/30 text-xs sm:text-sm space-y-2 text-left font-mono bg-emerald-950/50 p-4 rounded-xl">
+                      <div className="flex justify-between items-center text-emerald-100 border-b border-emerald-500/20 pb-2">
+                        <span className="text-emerald-500/80 uppercase tracking-widest text-[10px]">
+                          Guest Name
+                        </span>
+                        <span className="font-bold text-white truncate max-w-37.5">
+                          {scanResult.ticketDetails.customerName}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-emerald-100 pt-1">
+                        <span className="text-emerald-500/80 uppercase tracking-widest text-[10px]">
+                          Pass Type
+                        </span>
+                        <span className="font-black text-amber-400">
+                          {scanResult.ticketDetails.tierName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleReset}
+                    className="mt-2 w-full flex items-center justify-center gap-2 py-4 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-white font-bold tracking-widest uppercase rounded-xl text-[10px] transition-all shadow-xl active:scale-95"
+                  >
+                    <RefreshCcw className="w-3.5 h-3.5 text-orange-500" /> Scan
+                    Next Ticket
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* LIGHTNING-FAST MANUAL INPUT */}
-          <div className="pt-2 border-t border-slate-800/80">
+          <div className="pt-2 relative z-10">
             <form onSubmit={handleManualSubmit} className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-slate-500" />
               </div>
               <input
@@ -334,111 +459,50 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                 placeholder="Or type/paste ticket code..."
-                className="w-full pl-10 pr-28 py-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white placeholder-slate-600 focus:border-cyan-500 outline-none uppercase transition-all disabled:opacity-50 shadow-inner"
+                className="w-full pl-11 pr-28 py-4 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white placeholder-slate-600 focus:border-orange-500 outline-none uppercase transition-all shadow-inner disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={isProcessing || !manualCode.trim()}
-                className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all disabled:opacity-50 flex items-center justify-center shadow-md"
+                className="absolute right-2 top-2 bottom-2 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-orange-500 font-bold tracking-widest uppercase rounded-lg text-[10px] transition-all disabled:opacity-50 flex items-center justify-center"
               >
                 {isProcessing ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  "Verify Code"
+                  "Verify"
                 )}
               </button>
             </form>
           </div>
-
-          {/* SCAN RESULT OVERLAY (HIGH CONTRAST) */}
-          {scanResult && (
-            <div
-              className={`p-6 rounded-2xl border-2 animate-in zoom-in-95 duration-200 ${
-                scanResult.success
-                  ? "bg-emerald-950/80 border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
-                  : "bg-rose-950/80 border-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.3)]"
-              }`}
-            >
-              <div className="flex flex-col items-center text-center space-y-3">
-                {scanResult.success ? (
-                  <CheckCircle2 className="w-16 h-16 text-emerald-400 drop-shadow-[0_0_20px_rgba(16,185,129,0.8)] animate-bounce" />
-                ) : (
-                  <XCircle className="w-16 h-16 text-rose-400 drop-shadow-[0_0_20px_rgba(244,63,94,0.8)] animate-pulse" />
-                )}
-
-                <h2
-                  className={`text-2xl font-black tracking-tight ${scanResult.success ? "text-emerald-400" : "text-rose-400"}`}
-                >
-                  {scanResult.message}
-                </h2>
-
-                {scanResult.success && scanResult.ticketDetails && (
-                  <div className="w-full pt-3 border-t border-emerald-500/30 text-xs space-y-2 text-left font-mono">
-                    <div className="flex justify-between text-emerald-100 bg-emerald-900/40 p-2.5 rounded-xl border border-emerald-500/20">
-                      <span className="text-emerald-400/80 font-bold">
-                        GUEST:
-                      </span>
-                      <span className="font-black text-white text-sm">
-                        {scanResult.ticketDetails.customerName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-emerald-100 bg-emerald-900/40 p-2.5 rounded-xl border border-emerald-500/20">
-                      <span className="text-emerald-400/80 font-bold">
-                        PASS TYPE:
-                      </span>
-                      <span className="font-bold text-cyan-300">
-                        {scanResult.ticketDetails.tierName}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={handleReset}
-                  className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold rounded-xl text-xs transition-all shadow-xl"
-                >
-                  <RefreshCcw className="w-4 h-4 text-cyan-400" /> Scan Next
-                  Ticket
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!scanResult && (
-            <div className="text-center text-xs text-slate-400 flex items-center justify-center gap-2 bg-slate-950/60 py-3 rounded-xl border border-slate-800/60 font-mono">
-              <ShieldCheck className="w-4 h-4 text-cyan-400" /> Ready to scan
-              tickets...
-            </div>
-          )}
         </div>
 
         {/* RECENT SCANS LOG DRAWER */}
         {recentScans.length > 0 && (
-          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <h3 className="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2 border-b border-slate-800 pb-3">
-              <History className="w-4 h-4 text-cyan-400" /> Recent Scans
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
+            <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 border-b border-slate-800 pb-3">
+              <History className="w-3.5 h-3.5 text-orange-500" /> Recent
               Activity Log
             </h3>
             <div className="space-y-2">
               {recentScans.map((scan, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 bg-slate-950 border border-slate-800/80 rounded-xl text-xs font-mono"
+                  className="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800/80 rounded-xl text-xs font-mono shadow-inner"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <span
-                      className={`w-2 h-2 rounded-full ${scan.success ? "bg-emerald-500" : "bg-rose-500"}`}
+                      className={`w-2 h-2 rounded-full shadow-lg ${scan.success ? "bg-emerald-500 shadow-emerald-500/50" : "bg-red-500 shadow-red-500/50"}`}
                     ></span>
                     <div>
-                      <p className="font-bold text-white font-sans">
+                      <p className="font-bold text-white font-sans truncate max-w-37.5 sm:max-w-50">
                         {scan.name}
                       </p>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-[10px] text-slate-500 mt-0.5">
                         {scan.tier} • {scan.id.slice(0, 8)}...
                       </p>
                     </div>
                   </div>
-                  <span className="text-slate-400 text-[10px]">
+                  <span className="text-slate-500 text-[9px] uppercase tracking-widest font-bold">
                     {scan.time}
                   </span>
                 </div>

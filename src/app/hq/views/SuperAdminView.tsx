@@ -16,6 +16,7 @@ import {
 import CreateNodeForm from "../components/CreateNodeForm";
 import ChangePasswordForm from "../components/ChangePasswordForm";
 import UserSearchRadar from "../components/UserSearchRadar";
+import PayoutQueue from "../components/PayoutQueue";
 
 export default async function SuperAdminView({ role }: { role: Role }) {
   const [
@@ -27,6 +28,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
     systemLogs,
     recentBookings,
     radarUsers,
+    pendingPayouts,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.event.count(),
@@ -67,6 +69,13 @@ export default async function SuperAdminView({ role }: { role: Role }) {
         email: true,
         role: true,
         createdAt: true,
+      },
+    }),
+    prisma.payout.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      include: {
+        organizer: { select: { firstName: true, lastName: true, email: true } },
       },
     }),
   ]);
@@ -351,11 +360,17 @@ export default async function SuperAdminView({ role }: { role: Role }) {
           </div>
         </div>
 
-        <div className="lg:col-span-1 h-128">
+        <div className="lg:col-span-2 h-128">
+          <PayoutQueue payouts={pendingPayouts} canExecute={true} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-8">
+        <div className="h-128">
           <CreateNodeForm creatorRole={role} />
         </div>
 
-        <div className="lg:col-span-1 h-128">
+        <div className="h-128">
           <ChangePasswordForm />
         </div>
       </div>

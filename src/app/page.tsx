@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
 import EventBrowser from "../components/EventBrowser";
+import Link from "next/link";
 
 export default async function PublicHomePage() {
   const events = await prisma.event.findMany({
@@ -73,6 +74,22 @@ export default async function PublicHomePage() {
       </div>
 
       <EventBrowser initialEvents={events} />
+      <footer className="mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[10px] text-slate-500 font-mono">
+            &copy; {new Date().getFullYear()} Bamba Tickets Corporation. All
+            rights reserved.
+          </p>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/terms"
+              className="text-xs font-mono font-bold text-slate-300 hover:text-orange-500 uppercase tracking-widest transition-colors"
+            >
+              Terms & Conditions
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

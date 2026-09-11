@@ -80,7 +80,7 @@ export default async function StudioDashboard() {
   const topRecentBookings = recentBookings.slice(0, 5);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-fade-in-up pb-16 overflow-hidden">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -96,91 +96,102 @@ export default async function StudioDashboard() {
       />
 
       <div className="pb-6 border-b border-slate-800/80">
-        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
           Organizer Studio
         </h1>
-        <p className="text-slate-400 mt-1.5 text-sm sm:text-base">
+        <p className="text-slate-400 mt-1.5 text-xs sm:text-base">
           Welcome back. Here is the live telemetry for your events.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI Grid with bulletproof text sizing */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <WalletWidget
           availableBalance={availableBalance}
           hasPaymentMethod={hasPaymentMethod}
         />
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-emerald-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:scale-110 transition-transform">
-              <Banknote className="w-6 h-6" />
+        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-emerald-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+          <div>
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="p-2.5 sm:p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+                Gross Revenue
+              </h3>
             </div>
-            <h3 className="text-slate-400 font-medium text-sm uppercase tracking-wider">
-              Gross Revenue
-            </h3>
+            <div className="flex flex-wrap items-baseline gap-1.5 min-w-0">
+              <span className="text-emerald-500 text-xs sm:text-sm font-bold font-mono">
+                KES
+              </span>
+              <span className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight break-all">
+                {totalGrossRevenue.toLocaleString()}
+              </span>
+            </div>
           </div>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            <span className="text-emerald-500 text-2xl mr-1">KES</span>
-            {totalGrossRevenue.toLocaleString()}
-          </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-4 border-t border-slate-800/60">
+          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
             Total historical sales
           </p>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-orange-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform">
-              <TicketIcon className="w-6 h-6" />
+        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-orange-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+          <div>
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="p-2.5 sm:p-3 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <TicketIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+                Tickets Sold
+              </h3>
             </div>
-            <h3 className="text-slate-400 font-medium text-sm uppercase tracking-wider">
-              Tickets Sold
-            </h3>
+            <div className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight truncate">
+              {totalTicketsSold.toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {totalTicketsSold}
-          </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-4 border-t border-slate-800/60">
+          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
             Across all events
           </p>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-amber-500/30 rounded-3xl p-6 shadow-2xl transition-colors group">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform">
-              <CalendarDays className="w-6 h-6" />
+        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-amber-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+          <div>
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="p-2.5 sm:p-3 bg-amber-500/10 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+                Active Events
+              </h3>
             </div>
-            <h3 className="text-slate-400 font-medium text-sm uppercase tracking-wider">
-              Active Events
-            </h3>
+            <div className="text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight truncate">
+              {events.length.toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {events.length}
-          </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-4 border-t border-slate-800/60">
+          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
             Platform wide assets
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 pt-4">
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-black text-white flex items-center gap-3">
+            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3">
               <CalendarDays className="w-5 h-5 text-orange-500" />
               Your Events
             </h2>
             {events.length > 0 && (
               <Link
                 href="/studio/events"
-                className="text-sm font-bold text-orange-500 hover:text-orange-400 transition-colors"
+                className="text-xs sm:text-sm font-bold text-orange-500 hover:text-orange-400 transition-colors"
               >
                 View All &rarr;
               </Link>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
             {events.slice(0, 6).map((event) => (
               <Link
                 key={event.id}
@@ -214,29 +225,29 @@ export default async function StudioDashboard() {
                   </div>
                 </div>
 
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="font-bold text-white leading-snug pr-2 group-hover:text-orange-400 transition-colors line-clamp-2 mb-4">
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                  <h3 className="font-bold text-white text-sm sm:text-base leading-snug group-hover:text-orange-400 transition-colors line-clamp-2 mb-4">
                     {event.title}
                   </h3>
 
-                  <div className="flex items-center justify-between text-xs font-mono mt-auto pt-4 border-t border-slate-800/60">
+                  <div className="flex items-center justify-between text-xs font-mono pt-4 border-t border-slate-800/60">
                     <span className="text-slate-400">
                       {new Date(event.date).toLocaleDateString()}
                     </span>
-                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-orange-500 transition-colors" />
+                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-orange-500 transition-colors shrink-0" />
                   </div>
                 </div>
               </Link>
             ))}
 
             {events.length === 0 && (
-              <div className="md:col-span-2 text-center p-12 border border-dashed border-slate-800 rounded-3xl">
-                <p className="text-slate-500 font-medium">
+              <div className="sm:col-span-2 text-center p-8 sm:p-12 border border-dashed border-slate-800 rounded-3xl">
+                <p className="text-slate-500 font-medium text-sm">
                   You haven't created any events yet.
                 </p>
                 <Link
                   href="/studio/events/new"
-                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-xl transition-colors"
+                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-xl transition-colors text-xs uppercase tracking-wider"
                 >
                   <Plus className="w-4 h-4" /> Create First Event
                 </Link>
@@ -246,7 +257,7 @@ export default async function StudioDashboard() {
         </div>
 
         <div className="lg:col-span-1 space-y-6">
-          <h2 className="text-xl font-black text-white flex items-center gap-3">
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-emerald-500" />
             Live Sales Feed
           </h2>
@@ -266,23 +277,23 @@ export default async function StudioDashboard() {
                 {topRecentBookings.map((booking) => (
                   <div
                     key={booking.id}
-                    className="p-5 flex items-center justify-between hover:bg-slate-800/50 transition-colors"
+                    className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-slate-800/50 transition-colors"
                   >
-                    <div>
-                      <p className="font-black text-white">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-black text-white text-xs sm:text-sm truncate">
                         {booking.customerName}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 line-clamp-1">
+                      <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
                         <span className="truncate">{booking.eventName}</span>
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-black text-emerald-400">
+                      <p className="font-black text-emerald-400 text-xs sm:text-sm">
                         +KES {booking.organizerPayout.toLocaleString()}
                       </p>
-                      <p className="text-[10px] font-mono text-slate-500 mt-1 bg-slate-950 inline-block px-1.5 py-0.5 rounded border border-slate-800">
-                        {booking.tickets.length} Ticket(s)
+                      <p className="text-[9px] font-mono text-slate-500 mt-1 bg-slate-950 inline-block px-1.5 py-0.5 rounded border border-slate-800">
+                        {booking.tickets.length} Tix
                       </p>
                     </div>
                   </div>
@@ -293,8 +304,9 @@ export default async function StudioDashboard() {
         </div>
       </div>
 
-      <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl overflow-hidden mt-8">
-        <h2 className="text-xl font-black text-white flex items-center gap-3 mb-6">
+      {/* Payout & Settlement History: Responsive Cards on Mobile, Table on Desktop */}
+      <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-4 sm:p-6 shadow-2xl overflow-hidden mt-8">
+        <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3 mb-6">
           <Receipt className="w-5 h-5 text-cyan-500" />
           Payout & Settlement History
         </h2>
@@ -309,85 +321,157 @@ export default async function StudioDashboard() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto terminal-scroll">
-            <table className="w-full text-left text-sm text-slate-400">
-              <thead className="text-xs font-mono uppercase bg-slate-950/50 text-slate-500 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3 rounded-tl-xl">Date requested</th>
-                  <th className="px-4 py-3">Destination</th>
-                  <th className="px-4 py-3">Reference</th>
-                  <th className="px-4 py-3 text-right">Amount</th>
-                  <th className="px-4 py-3 rounded-tr-xl">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payoutHistory.map((payout) => (
-                  <tr
-                    key={payout.id}
-                    className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
-                  >
-                    <td className="px-4 py-3 font-mono text-[10px] text-slate-500">
+          <>
+            {/* Mobile View: Stacked Cards (No Horizontal Scrolling!) */}
+            <div className="block md:hidden space-y-3">
+              {payoutHistory.map((payout) => (
+                <div
+                  key={payout.id}
+                  className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-slate-500">
                       {new Date(payout.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
                       })}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-50 truncate">
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded text-[9px] font-bold font-mono flex items-center gap-1 uppercase tracking-widest ${
+                        payout.status === "COMPLETED"
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : payout.status === "FAILED"
+                            ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                            : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                      }`}
+                    >
+                      {payout.status === "COMPLETED" && (
+                        <CheckCircle2 className="w-3 h-3" />
+                      )}
+                      {payout.status === "FAILED" && (
+                        <XOctagon className="w-3 h-3" />
+                      )}
+                      {(payout.status === "PENDING" ||
+                        payout.status === "PROCESSING") && (
+                        <Clock className="w-3 h-3" />
+                      )}
+                      {payout.status === "COMPLETED"
+                        ? "DISBURSED"
+                        : payout.status}
+                    </span>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-2 pt-1 border-t border-slate-800/40">
+                    <div className="min-w-0 flex-1">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-slate-400 max-w-full truncate">
                         <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
                         <span className="truncate">{payout.destination}</span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-[10px] text-slate-500">
-                      {payout.reference ? (
+                      <p className="text-[10px] font-mono text-slate-500 mt-1.5">
+                        Ref:{" "}
                         <span className="text-slate-300 font-bold">
-                          {payout.reference}
+                          {payout.reference || "-"}
                         </span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <p className="font-black text-white text-xs">
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] font-mono text-slate-500 uppercase">
+                        Amount
+                      </p>
+                      <p className="font-black text-white text-sm">
                         KES {payout.amount.toLocaleString()}
                       </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1.5 rounded text-[9px] font-bold font-mono flex items-center gap-1.5 w-fit uppercase tracking-widest ${
-                          payout.status === "COMPLETED"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : payout.status === "FAILED"
-                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                              : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                        }`}
-                      >
-                        {payout.status === "COMPLETED" && (
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        )}
-                        {payout.status === "FAILED" && (
-                          <XOctagon className="w-3.5 h-3.5" />
-                        )}
-                        {(payout.status === "PENDING" ||
-                          payout.status === "PROCESSING") && (
-                          <Clock className="w-3.5 h-3.5" />
-                        )}
-                        {payout.status === "COMPLETED"
-                          ? "DISBURSED"
-                          : payout.status}
-                      </span>
-                    </td>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View: Standard Table */}
+            <div className="hidden md:block w-full overflow-x-auto terminal-scroll">
+              <table className="w-full text-left text-sm text-slate-400 min-w-162.5">
+                <thead className="text-xs font-mono uppercase bg-slate-950/50 text-slate-500 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 rounded-tl-xl">Date requested</th>
+                    <th className="px-4 py-3">Destination</th>
+                    <th className="px-4 py-3">Reference</th>
+                    <th className="px-4 py-3 text-right">Amount</th>
+                    <th className="px-4 py-3 rounded-tr-xl">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {payoutHistory.map((payout) => (
+                    <tr
+                      key={payout.id}
+                      className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="px-4 py-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">
+                        {new Date(payout.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-xs truncate">
+                          <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
+                          <span className="truncate">{payout.destination}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">
+                        {payout.reference ? (
+                          <span className="text-slate-300 font-bold">
+                            {payout.reference}
+                          </span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <p className="font-black text-white text-xs">
+                          KES {payout.amount.toLocaleString()}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1.5 rounded text-[9px] font-bold font-mono flex items-center gap-1.5 w-fit uppercase tracking-widest ${
+                            payout.status === "COMPLETED"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                              : payout.status === "FAILED"
+                                ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          }`}
+                        >
+                          {payout.status === "COMPLETED" && (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          )}
+                          {payout.status === "FAILED" && (
+                            <XOctagon className="w-3.5 h-3.5" />
+                          )}
+                          {(payout.status === "PENDING" ||
+                            payout.status === "PROCESSING") && (
+                            <Clock className="w-3.5 h-3.5" />
+                          )}
+                          {payout.status === "COMPLETED"
+                            ? "DISBURSED"
+                            : payout.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
-      <footer className="mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="mt-16 sm:mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <p className="text-[10px] text-slate-500 font-mono">
             &copy; {new Date().getFullYear()} Bamba Tickets Corporation. All
             rights reserved.

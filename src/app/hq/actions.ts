@@ -5,6 +5,9 @@ import prisma from "../../lib/prisma";
 import { auth } from "../../auth";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import bcrypt from "bcryptjs";
+import { revalidatePath } from "next/cache";
+import { Role } from "@prisma/client";
 import {
   checkRateLimit,
   recordFailedAttempt,
@@ -22,9 +25,6 @@ async function getClientIp(): Promise<string> {
   );
 }
 
-// ==========================================
-// 1. AIRLOCK PIN UNLOCK (WITH 3-STRIKE LOCKOUT)
-// ==========================================
 export async function unlockHQ(pin: string) {
   const ip = await getClientIp();
   const rateLimit = checkRateLimit(ip, 3, 15);
@@ -65,9 +65,6 @@ export async function unlockHQ(pin: string) {
   return { success: true };
 }
 
-// ==========================================
-// 2. DISPATCH DYNAMIC 2FA CHALLENGE
-// ==========================================
 export async function requestHQ2FACode() {
   const session = await auth();
   if (!session?.user?.id) return { error: "Authentication required." };
@@ -77,17 +74,25 @@ export async function requestHQ2FACode() {
     return { error: "Unauthorized." };
   }
 
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const expires = new Date(Date.now() + 5 * 60 * 1000); // 🔒 Locked back to a secure 5 minutes
   const identifier = `HQ_2FA_${user.id}`;
+  let otp;
 
-  await prisma.verificationToken.deleteMany({
+  const existingToken = await prisma.verificationToken.findFirst({
     where: { identifier },
+    orderBy: { expires: "desc" },
   });
 
-  await prisma.verificationToken.create({
-    data: { identifier, token: otp, expires },
-  });
+  if (existingToken && new Date() < existingToken.expires) {
+    otp = existingToken.token;
+  } else {
+    otp = crypto.randomInt(100000, 999999).toString();
+    const expires = new Date(Date.now() + 5 * 60 * 1000);
+
+    await prisma.verificationToken.deleteMany({ where: { identifier } });
+    await prisma.verificationToken.create({
+      data: { identifier, token: otp, expires },
+    });
+  }
 
   try {
     const transporter = nodemailer.createTransport({
@@ -120,9 +125,6 @@ export async function requestHQ2FACode() {
   return { success: true };
 }
 
-// ==========================================
-// 3. VERIFY DYNAMIC 2FA CHALLENGE
-// ==========================================
 export async function verifyHQ2FA(code: string) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Session expired." };
@@ -162,4 +164,127 @@ export async function verifyHQ2FA(code: string) {
   });
 
   return { success: true };
+}
+
+export async function provisionHQNode(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Unauthorized." };
+
+  const creator = await prisma.user.findUnique({
+    where: { id: session.user.id },
+  });
+  if (!creator || !["SUPER_ADMIN", "SUPERVISOR"].includes(creator.role)) {
+    return { success: false, error: "Insufficient clearance." };
+  }
+
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const targetRole = formData.get("role") as string;
+
+  if (!firstName || !lastName || !email || !password || !targetRole) {
+    return { success: false, error: "Missing parameters." };
+  }
+
+  if (creator.role === "SUPERVISOR" && targetRole !== "IT_TEAM") {
+    return { success: false, error: "Clearance restricted to IT_TEAM only." };
+  }
+
+  if (
+    creator.role === "SUPER_ADMIN" &&
+    !["SUPERVISOR", "IT_TEAM"].includes(targetRole)
+  ) {
+    return { success: false, error: "Invalid role assignment." };
+  }
+
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser)
+    return { success: false, error: "Identity already exists." };
+
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  await prisma.user.create({
+    data: {
+      firstName,
+      lastName,
+      email,
+      passwordHash,
+      role: targetRole as Role,
+      isIdVerified: true,
+    },
+  });
+
+  revalidatePath("/hq");
+  return { success: true };
+}
+
+export async function changePassword(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Unauthorized." };
+
+  const currentPassword = formData.get("currentPassword") as string;
+  const newPassword = formData.get("newPassword") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { success: false, error: "All fields are required." };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, error: "New passwords do not match." };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user || !user.passwordHash)
+    return { success: false, error: "Invalid user state." };
+
+  const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!isValid)
+    return { success: false, error: "Incorrect current credential." };
+
+  const newHash = await bcrypt.hash(newPassword, 12);
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { passwordHash: newHash },
+  });
+
+  return { success: true };
+}
+
+export async function searchHQUsers(query: string) {
+  const session = await auth();
+  if (!session?.user?.id)
+    return { success: false, error: "Unauthorized.", data: [] };
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user || !["SUPER_ADMIN", "SUPERVISOR"].includes(user.role)) {
+    return { success: false, error: "Insufficient clearance.", data: [] };
+  }
+
+  if (!query.trim()) {
+    return { success: true, data: [] };
+  }
+
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { firstName: { contains: query, mode: "insensitive" } },
+        { lastName: { contains: query, mode: "insensitive" } },
+        { email: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      role: true,
+      createdAt: true,
+    },
+    take: 12,
+  });
+
+  return { success: true, data: users };
 }

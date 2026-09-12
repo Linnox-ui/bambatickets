@@ -88,6 +88,7 @@ export default function Navbar({
           }}
         />
 
+        {/* Brand / Logo */}
         <div className="order-1 flex items-center gap-2 sm:gap-4 shrink-0">
           <Link
             href="/"
@@ -110,6 +111,7 @@ export default function Navbar({
           </div>
         </div>
 
+        {/* User Actions (Top Right) */}
         <div className="order-2 sm:order-3 flex items-center gap-3 sm:gap-4 shrink-0 ml-auto sm:ml-0 min-h-10">
           {isLoading ? (
             <div className="flex items-center gap-3">
@@ -120,7 +122,7 @@ export default function Navbar({
             <>
               <Link
                 href="/studio"
-                className="hidden lg:flex items-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold rounded-full text-xs transition-all"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold rounded-full text-xs transition-all"
               >
                 Organizer Studio
               </Link>
@@ -135,23 +137,17 @@ export default function Navbar({
               </Link>
             </>
           ) : (
-            <div className="flex items-center gap-3 sm:gap-4 pl-2 sm:pl-4 sm:border-l sm:border-slate-800/80">
-              {session?.user?.role === "ORGANIZER" && (
-                <Link
-                  href="/studio"
-                  className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-400 rounded-lg transition-all text-xs font-bold shadow-inner"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" /> Studio
-                </Link>
-              )}
-              <div className="flex flex-col items-end sm:flex">
-                <span className="text-xs font-bold text-white tracking-wide">
+            <div className="flex items-center gap-2 sm:gap-4 pl-2 sm:pl-4 sm:border-l sm:border-slate-800/80">
+              {/* Name & Role (Restored to normal visibility) */}
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-bold text-white tracking-wide truncate max-w-20 sm:max-w-30">
                   {session?.user?.firstName || "User"}
                 </span>
                 <span className="text-[9px] font-mono text-orange-500 uppercase tracking-widest">
                   {session?.user?.role || "CUSTOMER"}
                 </span>
               </div>
+
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-800/80 rounded-full flex items-center justify-center border border-slate-700 shadow-inner shrink-0 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-orange-400 transition-colors relative z-10" />
@@ -159,7 +155,7 @@ export default function Navbar({
 
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="p-2 sm:p-2.5 text-slate-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-500/10 shrink-0"
+                className="p-1.5 sm:p-2.5 text-slate-500 hover:text-red-400 transition-all rounded-lg hover:bg-red-500/10 shrink-0"
                 title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
@@ -168,8 +164,21 @@ export default function Navbar({
           )}
         </div>
 
-        <div className="order-3 sm:order-2 w-full sm:flex-1 sm:max-w-md px-1 sm:px-4">
-          <div className="relative w-full group">
+        {/* Search Block & Studio Button */}
+        <div className="order-3 sm:order-2 w-full sm:flex-1 sm:max-w-md px-1 sm:px-4 flex gap-2 items-center">
+          {/* Studio Button placed in front of search bar */}
+          {session?.user?.role === "ORGANIZER" && (
+            <Link
+              href="/studio"
+              title="Organizer Studio"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2.5 bg-slate-900 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-400 rounded-full transition-all text-xs font-bold shadow-inner shrink-0"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden sm:inline">Studio</span>
+            </Link>
+          )}
+
+          <div className="relative w-full group flex-1">
             <Search
               className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${searchQuery ? "text-orange-500" : "text-slate-400 group-focus-within:text-orange-500"}`}
             />

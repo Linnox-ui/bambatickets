@@ -18,6 +18,7 @@ import CreateNodeForm from "../components/CreateNodeForm";
 import ChangePasswordForm from "../components/ChangePasswordForm";
 import UserSearchRadar from "../components/UserSearchRadar";
 import PayoutQueue from "../components/PayoutQueue";
+import GodModeUserManager from "../components/GodModeUserManager";
 
 export default async function SuperAdminView({ role }: { role: Role }) {
   const [
@@ -95,6 +96,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
 
   return (
     <>
+      {/* KPI GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="group bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 hover:border-emerald-500/50 rounded-3xl p-6 shadow-2xl relative overflow-hidden transition-all duration-500">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
@@ -173,6 +175,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
         </div>
       </div>
 
+      {/* SYSTEM LOGS & ACTIVE NODES */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 mt-8">
         <div className="lg:col-span-2 flex flex-col bg-black border border-slate-800 rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative h-128">
           <div className="bg-slate-900/80 border-b border-slate-800 px-4 py-3 flex items-center justify-between z-10">
@@ -306,6 +309,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
         </div>
       </div>
 
+      {/* GLOBAL LEDGER & PAYOUT QUEUE */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8 mt-8">
         <div className="lg:col-span-2 bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex flex-col h-128">
           <h2 className="text-sm font-black text-white flex items-center gap-2.5 uppercase tracking-widest mb-6">
@@ -375,6 +379,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
         </div>
       </div>
 
+      {/* DISBURSED PAYOUT HISTORY */}
       <div className="mt-8">
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex flex-col h-128">
           <h2 className="text-sm font-black text-white flex items-center gap-2.5 uppercase tracking-widest mb-6">
@@ -434,6 +439,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
         </div>
       </div>
 
+      {/* ADMIN UTILITIES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-8">
         <div className="h-128">
           <CreateNodeForm creatorRole={role} />
@@ -443,6 +449,18 @@ export default async function SuperAdminView({ role }: { role: Role }) {
           <ChangePasswordForm />
         </div>
       </div>
+
+      {/* GOD MODE USER MANAGER - Only visible to Super Admins */}
+      {role === "SUPER_ADMIN" && (
+        <div className="mt-8 h-150">
+          <GodModeUserManager
+            initialUsers={radarUsers.map((u) => ({
+              ...u,
+              createdAt: u.createdAt,
+            }))}
+          />
+        </div>
+      )}
     </>
   );
 }

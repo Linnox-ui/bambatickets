@@ -288,3 +288,64 @@ export async function searchHQUsers(query: string) {
 
   return { success: true, data: users };
 }
+
+export async function changeUserRole(userId: string, newRole: Role) {
+  try {
+    const session = await auth();
+
+    if (session?.user?.role !== "SUPER_ADMIN") {
+      return {
+        success: false,
+        error: "Unauthorized. God Mode clearance required.",
+      };
+    }
+
+    if (session.user.id === userId) {
+      return {
+        success: false,
+        error: "You cannot modify your own Super Admin clearance.",
+      };
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+
+    revalidatePath("/hq");
+    return { success: true };
+  } catch (error) {
+    console.error("Role update failed:", error);
+    return { success: false, error: "Database error while updating the role." };
+  }
+}
+
+export async function wipeUserCompletely(userId: string) {
+  try {
+    const session = await auth();
+
+    if (session?.user?.role !== "SUPER_ADMIN") {
+      return {
+        success: false,
+        error: "Unauthorized. God Mode clearance required.",
+      };
+    }
+
+    if (session.user.id === userId) {
+      return { success: false, error: "Self-termination is restricted." };
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    revalidatePath("/hq");
+    return { success: true };
+  } catch (error) {
+    console.error("User wipe failed:", error);
+    return {
+      success: false,
+      error: "Failed to wipe user data. Relational conflict detected.",
+    };
+  }
+}

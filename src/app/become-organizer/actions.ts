@@ -3,20 +3,11 @@
 import prisma from "../../lib/prisma";
 import { auth } from "../../auth";
 
-export async function upgradeToOrganizer(formData: FormData) {
+export async function upgradeToOrganizer() {
   const session = await auth();
 
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
-  }
-
-  const payoutMethod = formData.get("payoutMethod") as string;
-  const payoutAccountName = formData.get("payoutAccountName") as string;
-  const payoutAccountNumber = formData.get("payoutAccountNumber") as string;
-  const payoutBankName = (formData.get("payoutBankName") as string) || null;
-
-  if (!payoutMethod || !payoutAccountName || !payoutAccountNumber) {
-    return { success: false, error: "Missing required payout parameters." };
   }
 
   try {
@@ -24,10 +15,6 @@ export async function upgradeToOrganizer(formData: FormData) {
       where: { id: session.user.id },
       data: {
         role: "ORGANIZER",
-        payoutMethod,
-        payoutAccountName,
-        payoutAccountNumber,
-        payoutBankName,
       },
     });
 

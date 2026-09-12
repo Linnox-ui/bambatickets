@@ -19,29 +19,26 @@ export default function TermsPage() {
         }}
       />
 
-      {/* Background Grid Accent */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[3rem_3rem] opacity-30 pointer-events-none" />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-20 relative z-10">
-        {/* Back Link */}
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-cyan-400 transition-colors bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl"
+            className="inline-flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-orange-400 transition-colors bg-slate-900/80 border border-slate-800 px-3.5 py-2 rounded-xl"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> Return Home
           </Link>
         </div>
 
-        {/* Header Card */}
         <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex items-center justify-between mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 shadow-inner">
               <FileText className="w-6 h-6" />
             </div>
-            <span className="px-3 py-1 bg-slate-950 border border-slate-800 text-[10px] font-mono font-bold text-cyan-400 rounded-lg uppercase tracking-widest">
+            <span className="px-3 py-1 bg-slate-950 border border-slate-800 text-[10px] font-mono font-bold text-orange-500 rounded-lg uppercase tracking-widest shadow-inner">
               Legal Compliance
             </span>
           </div>
@@ -50,7 +47,7 @@ export default function TermsPage() {
             Terms & Conditions
           </h1>
           <p className="text-xs text-slate-400 font-mono flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-cyan-500" />
+            <Terminal className="w-3.5 h-3.5 text-orange-500" />
             Last Updated:{" "}
             {new Date().toLocaleDateString("en-US", {
               year: "numeric",
@@ -60,8 +57,7 @@ export default function TermsPage() {
           </p>
         </div>
 
-        {/* Legal Body Container */}
-        <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl mb-12">
           <div className="prose prose-invert prose-slate max-w-none prose-headings:font-black prose-headings:tracking-tight prose-h2:text-white prose-h2:text-lg sm:prose-h2:text-xl prose-h2:border-b prose-h2:border-slate-800/80 prose-h2:pb-3 prose-h2:mt-8 prose-p:text-slate-300 prose-p:text-xs sm:prose-p:text-sm prose-li:text-xs sm:prose-li:text-sm prose-li:text-slate-300">
             <h2>1. Introduction</h2>
             <p>
@@ -133,15 +129,15 @@ export default function TermsPage() {
             <h2>6. Account Security</h2>
             <p>
               Users are responsible for maintaining the confidentiality of their
-              cryptographic passkeys and account credentials. Bamba Tickets will
-              not be liable for any loss or damage arising from unauthorized
-              access to your account.
+              passwords and account credentials. Bamba Tickets will not be
+              liable for any loss or damage arising from unauthorized access to
+              your account.
             </p>
 
             <h2>7. Platform Abuse & Termination</h2>
             <p>
-              Bamba Tickets reserves the right to suspend or terminate any node,
-              account, or event listing that violates these terms, engages in
+              Bamba Tickets reserves the right to suspend or terminate any
+              account or event listing that violates these terms, engages in
               fraudulent financial activity, or poses a security risk to the
               platform architecture.
             </p>
@@ -154,6 +150,8 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
+
+      <GlobalFooter />
     </div>
   );
 }

@@ -37,6 +37,15 @@ type RecentScan = {
   success: boolean;
 };
 
+interface ScanResponse {
+  success: boolean;
+  message: string;
+  ticketDetails?: {
+    customerName: string;
+    tierName: string;
+  };
+}
+
 export default function GatekeeperPortalPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const eventId = resolvedParams.eventId;
@@ -48,7 +57,7 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<ScanResponse | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [manualCode, setManualCode] = useState("");
 
@@ -67,6 +76,14 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
       }
       setIsLoadingSession(false);
     });
+
+    return () => {
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear();
+        } catch (e) {}
+      }
+    };
   }, [eventId]);
 
   const initScanner = () => {
@@ -107,7 +124,7 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
     }, 150);
   };
 
-  const handleScanOutcome = (response: any, code: string) => {
+  const handleScanOutcome = (response: ScanResponse, code: string) => {
     setScanResult(response);
 
     const timeStr = new Date().toLocaleTimeString([], {
@@ -206,7 +223,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
     );
   }
 
-  // 1. PIN LOGIN SCREEN
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 animate-fade-in-up">
@@ -270,7 +286,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
     );
   }
 
-  // 2. WORLD-CLASS SCANNER TERMINAL
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-6 pb-24 animate-fade-in-up">
       <style
@@ -294,7 +309,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
         }
         .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* Overriding HTML5 Qrcode Default UI */
         #gate-reader { border: none !important; border-radius: 1rem; overflow: hidden; width: 100%; }
         #gate-reader video { object-fit: cover !important; border-radius: 0.75rem; }
         #gate-reader__dashboard_section_csr span { color: #fff !important; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
@@ -304,7 +318,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
       />
 
       <div className="max-w-xl mx-auto space-y-6">
-        {/* TOP STATUS BAR */}
         <div className="flex items-center justify-between bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center text-orange-500 shadow-inner">
@@ -329,7 +342,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
           </button>
         </div>
 
-        {/* SHIFT METRICS COUNTER BAR */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-900/60 backdrop-blur-sm border border-slate-800/80 p-4 rounded-2xl flex items-center gap-3">
             <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500">
@@ -358,16 +370,12 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* SCANNER VIEWPORT CARD */}
         <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] pointer-events-none" />
 
-          {/* 🚀 CAMERA VIEWPORT WITH OVERLAYS */}
           <div className="relative overflow-hidden rounded-2xl border-2 border-slate-800 bg-slate-950 p-1 min-h-75 sm:min-h-100 flex flex-col justify-center shadow-inner">
-            {/* Base Camera Feed */}
             <div id="gate-reader" className="w-full relative z-10"></div>
 
-            {/* Holographic Laser Animation (Active only when searching) */}
             {!scanResult && !isProcessing && (
               <div className="absolute inset-0 z-20 pointer-events-none rounded-2xl overflow-hidden">
                 <div className="absolute left-0 right-0 h-1 bg-amber-500 shadow-[0_0_20px_rgba(249,115,22,1)] animate-laser" />
@@ -378,7 +386,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Processing Overlay */}
             {isProcessing && !scanResult && (
               <div className="absolute inset-0 z-30 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-amber-500">
                 <Loader2 className="w-12 h-12 animate-spin mb-4 drop-shadow-[0_0_15px_rgba(249,115,22,0.8)]" />
@@ -388,7 +395,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* 🚀 BEAUTIFUL RESULT OVERLAY ON TOP OF CAMERA */}
             {scanResult && (
               <div className="absolute inset-0 z-40 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
                 <div
@@ -447,7 +453,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* LIGHTNING-FAST MANUAL INPUT */}
           <div className="pt-2 relative z-10">
             <form onSubmit={handleManualSubmit} className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -476,7 +481,6 @@ export default function GatekeeperPortalPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* RECENT SCANS LOG DRAWER */}
         {recentScans.length > 0 && (
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-4">
             <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 border-b border-slate-800 pb-3">

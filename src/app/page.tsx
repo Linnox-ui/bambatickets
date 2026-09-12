@@ -1,12 +1,21 @@
 import prisma from "../lib/prisma";
 import EventBrowser from "../components/EventBrowser";
 import Link from "next/link";
+import { auth } from "../auth";
 
 export default async function PublicHomePage() {
+  const session = await auth();
+
   const events = await prisma.event.findMany({
     where: { isPublished: true },
     include: {
-      ticketTiers: true,
+      ticketTiers: {
+        include: {
+          _count: {
+            select: { tickets: true },
+          },
+        },
+      },
       organizer: { select: { firstName: true, lastName: true } },
     },
     orderBy: { date: "asc" },
@@ -74,6 +83,7 @@ export default async function PublicHomePage() {
       </div>
 
       <EventBrowser initialEvents={events} />
+
       <footer className="mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[10px] text-slate-500 font-mono">
@@ -81,6 +91,14 @@ export default async function PublicHomePage() {
             rights reserved.
           </p>
           <div className="flex items-center gap-6">
+            {session?.user?.role === "CUSTOMER" && (
+              <Link
+                href="/become-organizer"
+                className="text-xs font-mono font-bold text-orange-500 hover:text-orange-400 uppercase tracking-widest transition-colors"
+              >
+                Become an Organizer
+              </Link>
+            )}
             <Link
               href="/terms"
               className="text-xs font-mono font-bold text-slate-300 hover:text-orange-500 uppercase tracking-widest transition-colors"

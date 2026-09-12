@@ -22,7 +22,6 @@ function CodeVerificationForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // 🚀 WORLD-CLASS UX: Auto-submit when exactly 6 digits are entered
   useEffect(() => {
     if (code.length === 6 && !loading && !success) {
       handleVerification(code);

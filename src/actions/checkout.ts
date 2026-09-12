@@ -16,7 +16,7 @@ interface LockedTier {
   eventId: string;
 }
 
-const FEE_PERCENTAGE = 0.055; // 5.5% platform fee
+const FEE_PERCENTAGE = 0.055;
 const MAX_TICKETS_PER_ORDER = 20;
 
 class CheckoutError extends Error {}
@@ -27,6 +27,62 @@ function isValidEmail(email: string) {
 
 function round2(n: number) {
   return Math.round(n * 100) / 100;
+}
+
+export async function checkAvailability(eventId: string, itemsParam: string) {
+  if (!itemsParam) return { error: "No items selected." };
+
+  const rawItems = itemsParam
+    .split(",")
+    .map((item) => {
+      const [tierId, qty] = item.split(":");
+      return { tierId, quantity: parseInt(qty, 10) };
+    })
+    .filter((i) => i.tierId && Number.isFinite(i.quantity) && i.quantity > 0);
+
+  if (rawItems.length === 0) {
+    return { error: "No valid tickets selected." };
+  }
+
+  const mergedItems = new Map<string, number>();
+  for (const item of rawItems) {
+    mergedItems.set(
+      item.tierId,
+      (mergedItems.get(item.tierId) ?? 0) + item.quantity,
+    );
+  }
+
+  const totalRequested = [...mergedItems.values()].reduce((a, b) => a + b, 0);
+  if (totalRequested > MAX_TICKETS_PER_ORDER) {
+    return {
+      error: `You can order at most ${MAX_TICKETS_PER_ORDER} tickets at a time.`,
+    };
+  }
+
+  try {
+    for (const [tierId, quantity] of mergedItems) {
+      const tier = await prisma.ticketTier.findUnique({
+        where: { id: tierId },
+        include: { _count: { select: { tickets: true } } },
+      });
+
+      if (!tier || tier.eventId !== eventId) {
+        return { error: "Invalid ticket tier selected." };
+      }
+
+      const soldCount = tier._count.tickets;
+      const available = tier.capacity - soldCount;
+
+      if (quantity > available) {
+        return {
+          error: `You selected ${quantity} ticket(s) for "${tier.name}", but only ${Math.max(available, 0)} are remaining.`,
+        };
+      }
+    }
+    return { success: true };
+  } catch (err) {
+    return { error: "Failed to verify ticket availability." };
+  }
 }
 
 export async function initializeCheckout(
@@ -46,7 +102,7 @@ export async function initializeCheckout(
     return { error: "Please provide a valid email address." };
   }
 
-  const rawItems: CheckoutItemInput[] = itemsParam
+  const rawItems = itemsParam
     .split(",")
     .map((item) => {
       const [tierId, qty] = item.split(":");
@@ -58,7 +114,6 @@ export async function initializeCheckout(
     return { error: "No valid tickets selected." };
   }
 
-  // Merge duplicate tierId entries
   const mergedItems = new Map<string, number>();
   for (const item of rawItems) {
     mergedItems.set(
@@ -152,7 +207,6 @@ export async function initializeCheckout(
       };
     }
 
-    // Paystack requires integer subunit (cents/kobo)
     const amountInSubunits = Math.round(totalCharge * 100);
 
     const paystackResponse = await fetch(

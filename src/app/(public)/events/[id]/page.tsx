@@ -22,9 +22,12 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
 
   const event = await prisma.event.findUnique({
     where: { id: eventId, isPublished: true },
-    // 🚀 FIXED: Added feeBearer so the TicketSelector can calculate fees correctly
     include: {
-      ticketTiers: true,
+      ticketTiers: {
+        include: {
+          _count: { select: { tickets: true } },
+        },
+      },
       organizer: { select: { firstName: true, lastName: true } },
     },
   });
@@ -32,10 +35,20 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
   if (!event) notFound();
 
   const dateObj = new Date(event.date);
+  const isPast = dateObj.getTime() < new Date().getTime();
+
+  const totalCapacity = event.ticketTiers.reduce(
+    (acc, tier) => acc + tier.capacity,
+    0,
+  );
+  const totalSold = event.ticketTiers.reduce(
+    (acc, tier) => acc + (tier._count?.tickets || 0),
+    0,
+  );
+  const isSoldOut = totalCapacity > 0 && totalSold >= totalCapacity;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-orange-500/30 selection:text-orange-50 pb-24">
-      {/* 🚀 IMMERSIVE FULL-BLEED HERO SECTION */}
       <div className="relative w-full h-[40vh] sm:h-[50vh] min-h-87.5 bg-slate-900 overflow-hidden animate-fade-in-up">
         <style
           dangerouslySetInnerHTML={{
@@ -47,10 +60,9 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
           <img
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover opacity-60"
+            className={`w-full h-full object-cover ${isPast ? "opacity-30 grayscale" : "opacity-60"}`}
           />
         ) : (
-          /* 🚀 FIXED: Beautiful Premium Placeholder */
           <div className="w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center relative">
             <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.3)_0,transparent_70%)]" />
             <Ticket className="w-20 h-20 text-slate-800 relative z-10" />
@@ -58,7 +70,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
         )}
         <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-transparent" />
 
-        {/* Back Button Overlay */}
         <div className="absolute top-6 left-4 sm:left-6 lg:left-8 z-20">
           <Link
             href="/"
@@ -70,20 +81,30 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* 🚀 MAIN CONTENT GRID (Overlaps the hero image) */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 sm:-mt-32 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* LEFT COLUMN: EVENT DETAILS (7 Columns Wide) */}
           <div
             className="lg:col-span-7 space-y-6 sm:space-y-8 animate-fade-in-up"
             style={{ animationDelay: "0.1s" }}
           >
-            {/* Title & Organizer */}
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-mono font-bold uppercase tracking-widest shadow-inner backdrop-blur-md">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Tickets Available
-              </div>
+              {isPast ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest shadow-inner backdrop-blur-md bg-slate-500/10 border-slate-500/20 text-slate-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                  Event Ended
+                </div>
+              ) : isSoldOut ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest shadow-inner backdrop-blur-md bg-red-500/10 border-red-500/20 text-red-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                  Sold Out
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[10px] font-mono font-bold uppercase tracking-widest shadow-inner backdrop-blur-md bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Tickets Available
+                </div>
+              )}
+
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-2xl wrap-break-word">
                 {event.title}
               </h1>
@@ -101,7 +122,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Quick Info Pills */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <div className="flex items-center gap-2.5 px-4 py-3 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl shadow-lg">
                 <CalendarDays className="w-5 h-5 text-orange-500" />
@@ -124,7 +144,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Location Box */}
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 p-5 sm:p-6 rounded-3xl flex items-start gap-4 shadow-xl">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0 mt-1 border border-orange-500/20 shadow-inner">
                 <MapPin className="w-6 h-6 text-orange-500" />
@@ -137,7 +156,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Description */}
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
               <h2 className="text-xl font-black text-white flex items-center gap-2 border-b border-slate-800 pb-4">
                 <Info className="w-5 h-5 text-slate-500" /> About This Event
@@ -157,7 +175,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: STICKY CHECKOUT (5 Columns Wide) */}
           <div
             className="lg:col-span-5 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}
@@ -166,6 +183,7 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
               eventId={event.id}
               feeBearer={event.feeBearer as "ATTENDEE" | "ORGANIZER"}
               ticketTiers={event.ticketTiers}
+              isPast={isPast}
             />
           </div>
         </div>

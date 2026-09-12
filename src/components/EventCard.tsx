@@ -52,7 +52,7 @@ export default function EventCard({ event }: { event: EventItem }) {
             src={event.imageUrl as string}
             alt={event.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={() => setImageError(true)}
+            onError={() => setImageError(true)} 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-900 via-slate-950 to-indigo-950/40 relative">

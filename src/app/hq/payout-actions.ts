@@ -13,7 +13,6 @@ export async function executePaystackPayout(formData: FormData) {
     where: { id: session.user.id },
   });
 
-  // Security Update: Now allows both SUPER_ADMIN and SUPERVISOR
   if (!admin || !["SUPER_ADMIN", "SUPERVISOR"].includes(admin.role)) {
     return { success: false, error: "Financial execution clearance required." };
   }
@@ -128,10 +127,10 @@ export async function executePaystackPayout(formData: FormData) {
       subject: "Bamba Tickets: Funds Disbursed Successfully",
       html: `
         <div style="background-color: #020617; color: #f8fafc; font-family: monospace; padding: 24px; border-radius: 12px; border: 1px solid #1e293b;">
-          <h2 style="color: #06b6d4; margin-top: 0; font-family: sans-serif; letter-spacing: 2px;">BAMBA TICKETS // PAYOUT EXECUTED</h2>
+          <h2 style="color: #f97316; margin-top: 0; font-family: sans-serif; letter-spacing: 2px;">BAMBA TICKETS // PAYOUT EXECUTED</h2>
           <p>Your requested funds have been successfully disbursed to your designated account.</p>
           <div style="background-color: #0f172a; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #1e293b;">
-            <p style="margin: 0 0 8px 0;"><strong>Amount:</strong> <span style="color: #06b6d4; font-weight: bold;">KES ${payout.amount.toLocaleString()}</span></p>
+            <p style="margin: 0 0 8px 0;"><strong>Amount:</strong> <span style="color: #f97316; font-weight: bold;">KES ${payout.amount.toLocaleString()}</span></p>
             <p style="margin: 0 0 8px 0;"><strong>Destination:</strong> ${payout.destination}</p>
             <p style="margin: 0 0 8px 0;"><strong>Status:</strong> COMPLETED</p>
             <p style="margin: 0;"><strong>Reference:</strong> ${paystackReference}</p>

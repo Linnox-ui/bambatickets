@@ -43,24 +43,27 @@ export async function requestPasswordReset(formData: FormData) {
     });
 
     await transporter.sendMail({
-      from: `"Bamba Security" <${process.env.GMAIL_USER}>`,
+      from: `"Bamba Tickets" <${process.env.GMAIL_USER}>`,
       to: user.email,
-      subject: "Bamba Tickets: Password Reset Authorization",
+      subject: "Bamba Tickets: Password Reset Request",
       html: `
         <div style="background-color: #020617; color: #f8fafc; font-family: monospace; padding: 24px; border-radius: 12px; border: 1px solid #1e293b;">
-          <h2 style="color: #06b6d4; margin-top: 0;">BAMBA SECURITY // CREDENTIAL RESET</h2>
-          <p>A password reset was requested for the identity: <strong>${user.email}</strong></p>
-          <p>Click the secure link below to authorize a new credential. This link will self-destruct in 15 minutes.</p>
-          <a href="${resetLink}" style="display: inline-block; background-color: #06b6d4; color: #020617; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 12px;">
-            AUTHORIZE NEW PASSWORD
+          <h2 style="color: #f97316; margin-top: 0;">BAMBA TICKETS // SECURITY UPDATE</h2>
+          <p>A password reset was requested for the account: <strong>${user.email}</strong></p>
+          <p>Click the secure link below to create a new password. This link will expire in 15 minutes.</p>
+          <a href="${resetLink}" style="display: inline-block; background-color: #f97316; color: #020617; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 12px;">
+            RESET MY PASSWORD
           </a>
-          <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">If you did not initiate this request, safely ignore this transmission.</p>
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">If you did not request this, you can safely ignore this email.</p>
         </div>
       `,
     });
   } catch (err) {
     console.error("Failed to send reset email:", err);
-    return { success: false, error: "Failed to dispatch security email." };
+    return {
+      success: false,
+      error: "Failed to send reset email. Please try again.",
+    };
   }
 
   return { success: true };
@@ -73,11 +76,11 @@ export async function executePasswordReset(formData: FormData) {
   const confirmPassword = formData.get("confirmPassword") as string;
 
   if (!email || !token || !newPassword || !confirmPassword) {
-    return { success: false, error: "Incomplete payload parameters." };
+    return { success: false, error: "All fields are required." };
   }
 
   if (newPassword !== confirmPassword) {
-    return { success: false, error: "Cryptographic credentials do not match." };
+    return { success: false, error: "Passwords do not match." };
   }
 
   const identifier = `PWD_RESET_${email}`;

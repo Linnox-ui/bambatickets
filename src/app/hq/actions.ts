@@ -111,7 +111,7 @@ export async function requestHQ2FACode() {
         <div style="background-color: #020617; color: #f8fafc; font-family: monospace; padding: 24px; border-radius: 12px; border: 1px solid #1e293b;">
           <h2 style="color: #f97316; margin-top: 0;">BAMBA HQ // ELEVATED ACCESS</h2>
           <p>Authorization code for Root Terminal access requested by <strong>${user.email}</strong>:</p>
-          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; padding: 12px 0;">
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #f97316; padding: 12px 0;">
             ${otp}
           </div>
           <p style="color: #94a3b8; font-size: 12px;">Expires in 5 minutes. If you did not initiate this, sever connection immediately.</p>

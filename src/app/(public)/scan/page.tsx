@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { auth } from "../../../auth"; 
+import { auth } from "../../../auth";
 import prisma from "../../../lib/prisma";
 import {
   Users,
@@ -14,10 +14,8 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  addEventStaff,
-  removeEventStaff,
-} from "../../../actions/staff";
+import { addEventStaff, removeEventStaff } from "../../../actions/staff";
+import CopyLinkButton from "./CopyLinkButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -39,15 +37,14 @@ export default async function EventStaffPage({ params }: PageProps) {
   if (!event) notFound();
   if (event.organizerId !== session.user.id) redirect("/studio");
 
-  // Dynamically get the exact host URL (Works for both Localhost & Production)
   const headersList = await headers();
   const host = headersList.get("host") || "bambatickets.com";
   const protocol = host.includes("localhost") ? "http" : "https";
   const fullAppUrl = `${protocol}://${host}`;
+  const scanUrl = `${fullAppUrl}/scan/${event.id}`;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 sm:space-y-8 pb-24 animate-fade-in-up">
-      {/* HEADER */}
       <div className="flex items-start sm:items-center gap-3 sm:gap-4 mt-6 sm:mt-8 pb-4 sm:pb-6 border-b border-slate-800/80">
         <Link
           href={`/studio/events/${event.id}`}
@@ -65,7 +62,6 @@ export default async function EventStaffPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* ADD STAFF FORM */}
       <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
 
@@ -77,7 +73,6 @@ export default async function EventStaffPage({ params }: PageProps) {
         <form
           action={async (formData) => {
             "use server";
-            // TODO: Trigger Resend email API inside this action
             await addEventStaff(formData);
           }}
           className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 relative z-10"
@@ -114,7 +109,6 @@ export default async function EventStaffPage({ params }: PageProps) {
             <label className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest block mb-1.5">
               Gate Access PIN (4-6 Digits)
             </label>
-            {/* 🚀 FIXED: Added inputMode="numeric" & pattern to pop open the Mobile Number Pad! */}
             <input
               type="password"
               name="pinCode"
@@ -139,7 +133,6 @@ export default async function EventStaffPage({ params }: PageProps) {
         </form>
       </div>
 
-      {/* STAFF LIST & MANUAL SHARE */}
       <div className="bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl">
         <h2 className="text-lg font-black text-white flex items-center gap-2 border-b border-slate-800 pb-4 mb-5 sm:mb-6">
           <Users className="w-5 h-5 text-amber-500" /> Active Roster (
@@ -147,7 +140,6 @@ export default async function EventStaffPage({ params }: PageProps) {
         </h2>
 
         {event.eventStaffs.length === 0 ? (
-          /* 🚀 FIXED: Beautiful Premium Empty State */
           <div className="text-center py-12 px-4 bg-slate-950/50 rounded-2xl border border-slate-800 border-dashed">
             <ShieldPlus className="w-10 h-10 text-slate-600 mx-auto opacity-50 mb-3" />
             <p className="text-white font-bold text-sm">
@@ -165,8 +157,6 @@ export default async function EventStaffPage({ params }: PageProps) {
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-950 border border-slate-800 rounded-2xl group hover:border-slate-700 transition-colors"
               >
                 <div className="min-w-0">
-                  {" "}
-                  {/* min-w-0 prevents flex children from overflowing on tiny screens */}
                   <div className="font-bold text-white text-sm flex items-center gap-2 truncate">
                     <UserCheck className="w-4 h-4 text-emerald-500 shrink-0" />{" "}
                     {member.name}
@@ -204,7 +194,6 @@ export default async function EventStaffPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* SECURE GATE LINK SHARE BOX */}
         <div className="mt-8 pt-6 border-t border-slate-800">
           <p className="text-[9px] sm:text-[10px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-3">
             <Smartphone className="w-3.5 h-3.5 text-orange-500" /> Manual Portal
@@ -213,11 +202,11 @@ export default async function EventStaffPage({ params }: PageProps) {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-400 flex items-center gap-2 overflow-hidden shadow-inner">
               <LinkIcon className="w-4 h-4 text-slate-600 shrink-0" />
-              {/* 🚀 FIXED: Ensure long URLs don't break the layout by strictly truncating */}
               <span className="truncate select-all cursor-text text-amber-500/80">
-                {fullAppUrl}/scan/{event.id}
+                {scanUrl}
               </span>
             </div>
+            <CopyLinkButton url={scanUrl} />
           </div>
           <p className="text-[10px] sm:text-xs text-slate-500 mt-3 leading-relaxed">
             Send this URL to your staff. They will need the PIN you created for

@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   XOctagon,
   Clock,
+  Receipt,
 } from "lucide-react";
 import CreateNodeForm from "../components/CreateNodeForm";
 import ChangePasswordForm from "../components/ChangePasswordForm";
@@ -29,6 +30,7 @@ export default async function SuperAdminView({ role }: { role: Role }) {
     recentBookings,
     radarUsers,
     pendingPayouts,
+    completedPayouts,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.event.count(),
@@ -74,6 +76,14 @@ export default async function SuperAdminView({ role }: { role: Role }) {
     prisma.payout.findMany({
       where: { status: "PENDING" },
       orderBy: { createdAt: "asc" },
+      include: {
+        organizer: { select: { firstName: true, lastName: true, email: true } },
+      },
+    }),
+    prisma.payout.findMany({
+      where: { status: "COMPLETED" },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
       include: {
         organizer: { select: { firstName: true, lastName: true, email: true } },
       },
@@ -362,6 +372,65 @@ export default async function SuperAdminView({ role }: { role: Role }) {
 
         <div className="lg:col-span-2 h-128">
           <PayoutQueue payouts={pendingPayouts} canExecute={true} />
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 shadow-2xl flex flex-col h-128">
+          <h2 className="text-sm font-black text-white flex items-center gap-2.5 uppercase tracking-widest mb-6">
+            <Receipt className="w-4 h-4 text-emerald-500" /> Disbursed Payout
+            History
+          </h2>
+          <div className="overflow-x-auto flex-1 terminal-scroll">
+            {completedPayouts.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-500 opacity-60">
+                <Receipt className="w-8 h-8 mb-2" />
+                <p className="text-xs font-mono uppercase tracking-widest">
+                  No disbursements logged yet
+                </p>
+              </div>
+            ) : (
+              <table className="w-full text-left text-sm text-slate-400">
+                <thead className="text-xs font-mono uppercase bg-slate-950/50 text-slate-500 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 rounded-tl-xl">Organizer</th>
+                    <th className="px-4 py-3">Reference</th>
+                    <th className="px-4 py-3 text-right">Amount</th>
+                    <th className="px-4 py-3 rounded-tr-xl">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completedPayouts.map((payout) => (
+                    <tr
+                      key={payout.id}
+                      className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="text-white text-xs font-bold">
+                          {payout.organizer.firstName}{" "}
+                          {payout.organizer.lastName}
+                        </p>
+                        <p className="text-[10px] font-mono text-slate-500 truncate max-w-35">
+                          {payout.destination}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[10px] text-slate-300 font-bold">
+                        {payout.reference || "Manual"}
+                      </td>
+                      <td className="px-4 py-3 text-right font-black text-emerald-400 text-xs">
+                        KES {payout.amount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 rounded text-[9px] font-bold font-mono flex items-center gap-1 w-fit bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+                          <CheckCircle2 className="w-3 h-3" /> Disbursed
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
 

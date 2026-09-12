@@ -12,12 +12,10 @@ export default function TwoFactorGate({ email }: { email: string }) {
   const [cooldown, setCooldown] = useState(30);
   const router = useRouter();
 
-  // Send initial code on load
   useEffect(() => {
     requestHQ2FACode();
   }, []);
 
-  // Cooldown timer for resend
   useEffect(() => {
     if (cooldown <= 0) return;
     const interval = setInterval(() => setCooldown((c) => c - 1), 1000);
@@ -26,11 +24,10 @@ export default function TwoFactorGate({ email }: { email: string }) {
 
   const handleResend = async () => {
     if (cooldown > 0) return;
-    setCooldown(45); // Set 45 second cooldown before they can resend again
+    setCooldown(45);
     await requestHQ2FACode();
   };
 
-  // 🚀 NEW: Standalone verification function that we can trigger automatically
   const processVerification = async (codeToVerify: string) => {
     setLoading(true);
     setErrorMsg(null);
@@ -41,23 +38,20 @@ export default function TwoFactorGate({ email }: { email: string }) {
       router.refresh();
     } else {
       setErrorMsg(res.error || "Invalid code.");
-      setCode(""); // Clear the input so they can try again
+      setCode("");
       setLoading(false);
     }
   };
 
-  // 🚀 NEW: Watches the input and auto-submits exactly at 6 digits
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newCode = e.target.value.replace(/\D/g, ""); // Strip non-numbers
+    const newCode = e.target.value.replace(/\D/g, "");
     setCode(newCode);
 
-    // AUTO-AUTHORIZE: If it hits 6 digits, instantly fire the verification!
     if (newCode.length === 6 && !loading) {
       processVerification(newCode);
     }
   };
 
-  // Fallback for manual submit (e.g., if they hit Enter)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length === 6 && !loading) {
@@ -90,7 +84,7 @@ export default function TwoFactorGate({ email }: { email: string }) {
               type="text"
               maxLength={6}
               value={code}
-              onChange={handleInputChange} // 🚀 Using our new auto-trigger handler
+              onChange={handleInputChange}
               placeholder="••••••"
               disabled={loading}
               autoFocus

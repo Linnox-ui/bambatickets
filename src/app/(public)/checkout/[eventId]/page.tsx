@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import {
@@ -10,9 +10,13 @@ import {
   CreditCard,
   Loader2,
   Smartphone,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
-import { initializeCheckout } from "../../../../actions/checkout";
+import {
+  initializeCheckout,
+  checkAvailability,
+} from "../../../../actions/checkout";
 
 declare global {
   interface Window {
@@ -33,10 +37,26 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPaystackLoaded, setIsPaystackLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [capacityError, setCapacityError] = useState("");
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true);
+
+  useEffect(() => {
+    if (!eventId || !itemsParam) {
+      setIsCheckingAvailability(false);
+      return;
+    }
+
+    checkAvailability(eventId, itemsParam).then((res) => {
+      if (res.error) {
+        setCapacityError(res.error);
+      }
+      setIsCheckingAvailability(false);
+    });
+  }, [eventId, itemsParam]);
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !itemsParam) return;
+    if (!name || !email || !itemsParam || capacityError) return;
 
     if (!isPaystackLoaded && typeof window.PaystackPop === "undefined") {
       setErrorMsg(
@@ -53,7 +73,6 @@ export default function CheckoutPage() {
       formData.append("customerName", name);
       formData.append("customerEmail", email);
 
-      // 1. Initialize booking & retrieve server-locked access code
       const result = await initializeCheckout(eventId, itemsParam, formData);
 
       if (result.error || !result.access_code) {
@@ -62,7 +81,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 2. Open Paystack v2 Checkout with the secure access code
       const popup = new window.PaystackPop();
       popup.checkout({
         accessCode: result.access_code,
@@ -86,9 +104,10 @@ export default function CheckoutPage() {
     }
   };
 
+  const isFormDisabled = isLoading || isCheckingAvailability || !!capacityError;
+
   return (
     <>
-      {/* Load Paystack Inline v2 using Next.js Script */}
       <Script
         src="https://js.paystack.co/v2/inline.js"
         strategy="afterInteractive"
@@ -139,77 +158,104 @@ export default function CheckoutPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleCheckoutSubmit} className="space-y-5">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="customerName"
-                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono"
-                  >
-                    Full Legal Name
-                  </label>
-                  <input
-                    id="customerName"
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. John Doe"
-                    className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-sm focus:border-orange-500 outline-none transition-all shadow-inner placeholder-slate-600"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="customerEmail"
-                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    id="customerEmail"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. john@example.com"
-                    className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-sm focus:border-orange-500 outline-none transition-all shadow-inner placeholder-slate-600"
-                  />
-                </div>
-
-                {errorMsg && (
-                  <p className="text-red-400 text-xs font-bold bg-red-500/10 border border-red-500/20 p-4 rounded-2xl shadow-inner">
-                    {errorMsg}
+              {isCheckingAvailability ? (
+                <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-slate-950/50 rounded-2xl border border-slate-800">
+                  <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                  <p className="text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Verifying Availability...
                   </p>
-                )}
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4" /> Pay with M-Pesa /
-                        Card
-                      </>
-                    )}
-                  </button>
                 </div>
-
-                <div className="flex items-center justify-center gap-4 pt-2 text-[10px] text-slate-500 font-mono uppercase tracking-widest">
-                  <span className="flex items-center gap-1.5">
-                    <Smartphone className="w-3.5 h-3.5 text-orange-500" />{" "}
-                    M-Pesa Supported
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> SSL
-                    Encrypted
-                  </span>
+              ) : capacityError ? (
+                <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl shadow-inner">
+                  <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 text-sm">
+                    <p className="font-bold text-red-400">
+                      Order Cannot Be Completed
+                    </p>
+                    <p className="text-red-300/80">{capacityError}</p>
+                    <Link
+                      href={`/events/${eventId}`}
+                      className="inline-block mt-2 text-xs font-bold text-red-400 hover:text-red-300 underline underline-offset-2"
+                    >
+                      Return to Event and adjust quantity
+                    </Link>
+                  </div>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleCheckoutSubmit} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="customerName"
+                      className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono"
+                    >
+                      Full Legal Name
+                    </label>
+                    <input
+                      id="customerName"
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      disabled={isFormDisabled}
+                      className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-sm focus:border-orange-500 outline-none transition-all shadow-inner placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="customerEmail"
+                      className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono"
+                    >
+                      Email Address
+                    </label>
+                    <input
+                      id="customerEmail"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. john@example.com"
+                      disabled={isFormDisabled}
+                      className="w-full px-4 py-4 bg-slate-950 border border-slate-800 rounded-2xl text-white text-sm focus:border-orange-500 outline-none transition-all shadow-inner placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+
+                  {errorMsg && (
+                    <p className="text-red-400 text-xs font-bold bg-red-500/10 border border-red-500/20 p-4 rounded-2xl shadow-inner">
+                      {errorMsg}
+                    </p>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isFormDisabled}
+                      className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 disabled:opacity-50 active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4" /> Pay with M-Pesa /
+                          Card
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-4 pt-2 text-[10px] text-slate-500 font-mono uppercase tracking-widest">
+                    <span className="flex items-center gap-1.5">
+                      <Smartphone className="w-3.5 h-3.5 text-orange-500" />{" "}
+                      M-Pesa Supported
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />{" "}
+                      SSL Encrypted
+                    </span>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </main>

@@ -20,7 +20,11 @@ type Event = {
   location: string;
   imageUrl: string | null;
   isPublished: boolean;
-  ticketTiers: { price: number }[];
+  ticketTiers: {
+    price: number;
+    capacity: number;
+    _count?: { tickets: number };
+  }[];
   organizer: { firstName: string; lastName: string };
 };
 
@@ -85,7 +89,6 @@ export default function EventBrowser({
         </section>
       )}
 
-      {/* 🚀 DYNAMIC MARGIN: Notice the padding shifts (pt-8 vs pt-4) based on if the banner is hidden */}
       <main
         className={`max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pb-16 sm:pb-24 relative z-10 min-h-[50vh] transition-all duration-500 ${searchQuery ? "pt-8 sm:pt-12" : "pt-4"}`}
       >
@@ -149,33 +152,65 @@ export default function EventBrowser({
                 event.ticketTiers.length > 0
                   ? Math.min(...event.ticketTiers.map((t) => t.price))
                   : 0;
-              return (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className="animate-fade-in-up group relative bg-slate-900 border border-slate-800 hover:border-orange-500/50 rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 flex flex-col justify-between hover:-translate-y-2"
-                  style={{ animationDelay: `${(index % 10) * 50}ms` }}
-                >
+
+              const totalCapacity = event.ticketTiers.reduce(
+                (acc, tier) => acc + tier.capacity,
+                0,
+              );
+              const totalSold = event.ticketTiers.reduce(
+                (acc, tier) => acc + (tier._count?.tickets || 0),
+                0,
+              );
+              const isSoldOut = totalCapacity > 0 && totalSold >= totalCapacity;
+              const isPast =
+                new Date(event.date).getTime() < new Date().getTime();
+
+              const cardClasses = `animate-fade-in-up group relative bg-slate-900 border border-slate-800 rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 flex flex-col justify-between ${
+                isPast
+                  ? "opacity-60 grayscale cursor-not-allowed"
+                  : "hover:border-orange-500/50 hover:-translate-y-2 cursor-pointer"
+              }`;
+              const cardStyle = { animationDelay: `${(index % 10) * 50}ms` };
+
+              const cardContent = (
+                <>
                   <div>
                     <div className="relative aspect-4/3 bg-slate-950 overflow-hidden">
                       {event.imageUrl ? (
                         <img
                           src={event.imageUrl}
                           alt={event.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          className={`w-full h-full object-cover transition-transform duration-700 ${!isPast && "group-hover:scale-110"}`}
                         />
                       ) : (
-                        <div className="w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center group-hover:scale-105 transition-transform duration-500 relative">
+                        <div
+                          className={`w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center transition-transform duration-500 relative ${!isPast && "group-hover:scale-105"}`}
+                        >
                           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.4)_0,transparent_70%)]" />
-                          <Ticket className="w-12 h-12 text-slate-700 relative z-10 group-hover:text-orange-500/50 transition-colors" />
+                          <Ticket
+                            className={`w-12 h-12 text-slate-700 relative z-10 transition-colors ${!isPast && "group-hover:text-orange-500/50"}`}
+                          />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent opacity-90" />
-                      <div className="absolute top-4 sm:top-5 right-4 sm:right-5 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-[10px] sm:text-xs font-mono font-bold shadow-xl">
-                        KES{" "}
-                        <span className="text-orange-500">
-                          {lowestPrice.toLocaleString()}
-                        </span>
+
+                      <div className="absolute top-4 sm:top-5 right-4 sm:right-5 flex flex-col gap-2 items-end">
+                        <div className="bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-[10px] sm:text-xs font-mono font-bold shadow-xl">
+                          KES{" "}
+                          <span className="text-orange-500">
+                            {lowestPrice.toLocaleString()}
+                          </span>
+                        </div>
+
+                        {isPast ? (
+                          <div className="bg-slate-800/90 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
+                            Ended
+                          </div>
+                        ) : isSoldOut ? (
+                          <div className="bg-red-500/90 text-white border border-red-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse">
+                            Sold Out
+                          </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -197,7 +232,9 @@ export default function EventBrowser({
                           })}
                         </div>
                       </div>
-                      <h3 className="text-xl sm:text-2xl font-black text-white group-hover:text-orange-400 transition-colors line-clamp-2 leading-tight">
+                      <h3
+                        className={`text-xl sm:text-2xl font-black text-white transition-colors line-clamp-2 leading-tight ${!isPast && "group-hover:text-orange-400"}`}
+                      >
                         {event.title}
                       </h3>
                       <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 font-medium">
@@ -214,11 +251,38 @@ export default function EventBrowser({
                       </div>
                       {event.organizer.firstName}
                     </span>
-                    <span className="px-4 py-2 sm:px-5 sm:py-2.5 bg-slate-800 group-hover:bg-orange-500 border border-slate-700 text-slate-300 group-hover:text-slate-950 font-black rounded-full sm:rounded-xl text-[10px] sm:text-xs transition-all flex items-center gap-2 shadow-lg">
-                      Tickets{" "}
-                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1.5 transition-transform" />
+                    <span
+                      className={`px-4 py-2 sm:px-5 sm:py-2.5 font-black rounded-full sm:rounded-xl text-[10px] sm:text-xs transition-all flex items-center gap-2 shadow-lg ${isPast ? "bg-slate-800 text-slate-500 border border-slate-700" : "bg-slate-800 group-hover:bg-orange-500 border border-slate-700 text-slate-300 group-hover:text-slate-950"}`}
+                    >
+                      {isPast
+                        ? "Unavailable"
+                        : isSoldOut
+                          ? "Sold Out"
+                          : "Tickets"}
+                      {!isPast && !isSoldOut && (
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1.5 transition-transform" />
+                      )}
                     </span>
                   </div>
+                </>
+              );
+
+              if (isPast) {
+                return (
+                  <div key={event.id} className={cardClasses} style={cardStyle}>
+                    {cardContent}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className={cardClasses}
+                  style={cardStyle}
+                >
+                  {cardContent}
                 </Link>
               );
             })}

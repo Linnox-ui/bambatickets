@@ -40,11 +40,20 @@ export const metadata: Metadata = {
     siteName: "Bamba Tickets",
     locale: "en_KE",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image", // Points to your Next.js OG image route / file
+        width: 1200,
+        height: 630,
+        alt: "Bamba Tickets - Effortless Event Access",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Bamba Tickets",
     description: "Secure your event passes instantly.",
+    images: ["/opengraph-image"],
   },
   alternates: {
     canonical: "/",

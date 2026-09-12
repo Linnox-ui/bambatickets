@@ -35,16 +35,16 @@ export default function Airlock() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-emerald-500 font-mono p-4 sm:p-8 selection:bg-emerald-500 selection:text-black flex flex-col justify-center items-center">
-      <div className="w-full max-w-2xl bg-black border border-slate-800 p-6 sm:p-8 rounded-lg shadow-[0_0_50px_rgba(16,185,129,0.08)]">
+    <div className="min-h-screen bg-black text-orange-500 font-mono p-4 sm:p-8 selection:bg-orange-500 selection:text-black flex flex-col justify-center items-center">
+      <div className="w-full max-w-2xl bg-black border border-slate-800 p-6 sm:p-8 rounded-lg shadow-[0_0_50px_rgba(249,115,22,0.08)]">
         <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <Terminal className="w-6 h-6 text-emerald-500" />
+            <Terminal className="w-6 h-6 text-orange-500" />
             <span className="text-sm tracking-widest uppercase font-bold text-slate-400">
               Bamba-OS / Root Access Shell
             </span>
           </div>
-          <span className="text-[10px] text-orange-500 font-bold tracking-widest border border-orange-500/30 px-2 py-0.5 rounded">
+          <span className="text-[10px] text-red-500 font-bold tracking-widest border border-red-500/30 px-2 py-0.5 rounded">
             RING 1 / AIRLOCK
           </span>
         </div>
@@ -52,7 +52,7 @@ export default function Airlock() {
         <div className="space-y-2 text-sm sm:text-base leading-relaxed opacity-90">
           <p>
             System initialized:{" "}
-            <span className="text-emerald-400">{timestamp}</span>
+            <span className="text-orange-400">{timestamp}</span>
           </p>
           <p>Kernel 6.1.0-amd64 #1 SMP PREEMPT_DYNAMIC</p>
           <p className="text-red-500 font-bold flex items-center gap-2 pt-2">
@@ -80,7 +80,7 @@ export default function Airlock() {
               disabled={loading}
               autoFocus
               placeholder="••••••"
-              className="bg-transparent outline-none border-none text-white tracking-[0.5em] font-black caret-emerald-500 w-48 placeholder-slate-700"
+              className="bg-transparent outline-none border-none text-white tracking-[0.5em] font-black caret-orange-500 w-48 placeholder-slate-700"
             />
           </form>
 
@@ -91,7 +91,7 @@ export default function Airlock() {
           )}
 
           {loading && (
-            <p className="text-emerald-400 mt-3 text-xs animate-pulse">
+            <p className="text-orange-400 mt-3 text-xs animate-pulse">
               [+] Verifying cryptographic node signature...
             </p>
           )}

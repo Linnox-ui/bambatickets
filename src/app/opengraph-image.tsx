@@ -11,17 +11,19 @@ export default function OpenGraphImage() {
         width: "100%",
         height: "100%",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "#0A0A0A",
+        padding: "0 80px",
       }}
     >
-      <svg viewBox="0 0 150 150" width="300" height="300">
+      {/* Left Side: SVG Logo */}
+      <svg viewBox="0 0 150 150" width="220" height="220">
         <path
           d="M 30 30 H 90 C 120 30, 120 70, 90 70 H 60"
           fill="none"
-          stroke="#0A0A0A"
+          stroke="#FFFFFF"
           strokeWidth="22"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -31,7 +33,7 @@ export default function OpenGraphImage() {
           y1="30"
           x2="60"
           y2="120"
-          stroke="#0A0A0A"
+          stroke="#FFFFFF"
           strokeWidth="22"
           strokeLinecap="round"
         />
@@ -44,16 +46,37 @@ export default function OpenGraphImage() {
           strokeLinejoin="round"
         />
       </svg>
+
+      {/* Right Side: Branding & Tagline */}
       <div
         style={{
-          fontSize: 72,
-          fontWeight: 900,
-          color: "#0A0A0A",
-          marginTop: 40,
-          letterSpacing: "-0.05em",
+          display: "flex",
+          flexDirection: "column",
+          marginLeft: 50,
         }}
       >
-        Bamba Tickets
+        <div
+          style={{
+            fontSize: 76,
+            fontWeight: 900,
+            color: "#FFFFFF",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.1,
+          }}
+        >
+          BAMBA TICKETS
+        </div>
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 500,
+            color: "#A1A1AA",
+            marginTop: 16,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Effortless Event Access. Instant Discovery.
+        </div>
       </div>
     </div>,
     { ...size },

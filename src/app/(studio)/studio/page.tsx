@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import WalletWidget from "./components/WalletWidget";
 
-// Type definition to avoid using any[]
 type RecentBooking = {
   id: string;
   customerName: string;
@@ -25,7 +24,7 @@ type RecentBooking = {
   organizerPayout: number;
   createdAt: Date;
   eventName: string;
-  tickets: any[]; // Or import the Ticket type from @prisma/client
+  tickets: any[];
 };
 
 export default async function StudioDashboard() {
@@ -91,7 +90,7 @@ export default async function StudioDashboard() {
   const topRecentBookings = recentBookings.slice(0, 5);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-fade-in-up pb-16">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-fade-in-up pb-16 overflow-x-hidden">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -374,11 +373,12 @@ export default async function StudioDashboard() {
                   </div>
 
                   <div className="flex items-end justify-between gap-3 pt-1 border-t border-slate-800/40">
-                    <div className="min-w-0 flex-1">
-                      {/* Fixed truncation logic here by ensuring the flex chain respects bounds */}
-                      <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-slate-400 w-fit max-w-full">
+                    {/* FIXED: The parent div now uses flex-1 and min-w-0 to constrain width */}
+                    <div className="flex-1 min-w-0">
+                      {/* FIXED: Removed w-fit and block span, replaced with standard flex truncation logic */}
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-slate-400 overflow-hidden w-full">
                         <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
-                        <span className="truncate block">
+                        <span className="truncate w-full block">
                           {payout.destination}
                         </span>
                       </div>
@@ -431,9 +431,9 @@ export default async function StudioDashboard() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-xs truncate">
+                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-[200px] overflow-hidden">
                           <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
-                          <span className="truncate">{payout.destination}</span>
+                          <span className="truncate w-full block">{payout.destination}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">

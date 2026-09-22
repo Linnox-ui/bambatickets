@@ -431,7 +431,7 @@ export default async function StudioDashboard() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-[200px] overflow-hidden">
+                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-50 overflow-hidden">
                           <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
                           <span className="truncate w-full block">{payout.destination}</span>
                         </div>

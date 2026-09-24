@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Clock,
   XOctagon,
+  Trophy,
 } from "lucide-react";
 import WalletWidget from "./components/WalletWidget";
 
@@ -90,7 +91,7 @@ export default async function StudioDashboard() {
   const topRecentBookings = recentBookings.slice(0, 5);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-fade-in-up pb-16 overflow-x-hidden">
+    <div className="w-full overflow-x-hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 animate-fade-in-up pb-16">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -105,110 +106,131 @@ export default async function StudioDashboard() {
         }}
       />
 
-      <div className="pb-5 sm:pb-6 border-b border-slate-800/80 mt-4 sm:mt-0">
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Organizer Studio
-        </h1>
-        <p className="text-slate-400 mt-1.5 text-xs sm:text-base">
-          Welcome back. Here is the live telemetry for your events.
-        </p>
+      {/* --- UPDATED HEADER WITH POLLS LINK --- */}
+      <div className="pb-5 sm:pb-6 border-b border-slate-800/80 mt-4 sm:mt-0 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Organizer Studio
+          </h1>
+          <p className="text-slate-400 mt-1.5 text-xs sm:text-base">
+            Welcome back. Here is the live telemetry for your events.
+          </p>
+        </div>
+        
+        <Link
+          href="/polls/dashboard"
+          className="inline-flex items-center gap-3 px-4 py-2.5 sm:px-5 sm:py-3 bg-slate-900 border border-slate-800 hover:border-orange-500/50 hover:bg-slate-800 rounded-xl text-slate-200 transition-all shadow-lg shrink-0 group w-full sm:w-auto justify-center sm:justify-start"
+        >
+          <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">
+            <Trophy className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest leading-none mb-1">Voting Center</p>
+            <p className="text-sm font-bold tracking-wide leading-none">Manage Polls</p>
+          </div>
+        </Link>
       </div>
+      {/* -------------------------------------- */}
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <WalletWidget
-          availableBalance={availableBalance}
-          hasPaymentMethod={hasPaymentMethod}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+        
+        <div className="min-w-0 w-full overflow-hidden max-w-full">
+          <WalletWidget
+            availableBalance={availableBalance}
+            hasPaymentMethod={hasPaymentMethod}
+          />
+        </div>
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-emerald-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+        <div className="min-w-0 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-emerald-500/30 rounded-3xl p-5 sm:p-6 lg:p-8 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
           <div>
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="p-2.5 sm:p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
-                <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="flex items-center gap-3 mb-4 sm:mb-5">
+              <div className="p-3 sm:p-4 bg-emerald-500/10 text-emerald-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <Banknote className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+              <h3 className="text-slate-400 font-medium text-sm sm:text-base uppercase tracking-wider truncate min-w-0">
                 Gross Revenue
               </h3>
             </div>
-            <div className="flex flex-row items-baseline gap-1.5 min-w-0 w-full overflow-hidden">
-              <span className="text-emerald-500 text-xs sm:text-sm font-bold font-mono shrink-0">
+            <div className="flex flex-row items-baseline gap-2 min-w-0 w-full overflow-hidden">
+              <span className="text-emerald-500 text-sm sm:text-base font-bold font-mono shrink-0">
                 KES
               </span>
-              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate">
+              <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight truncate min-w-0">
                 {totalGrossRevenue.toLocaleString()}
               </span>
             </div>
           </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
+          <p className="text-xs text-slate-500 font-mono mt-6 uppercase tracking-widest pt-4 border-t border-slate-800/60 truncate min-w-0">
             Total historical sales
           </p>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-orange-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+        <div className="min-w-0 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-orange-500/30 rounded-3xl p-5 sm:p-6 lg:p-8 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
           <div>
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="p-2.5 sm:p-3 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
-                <TicketIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="flex items-center gap-3 mb-4 sm:mb-5">
+              <div className="p-3 sm:p-4 bg-orange-500/10 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <TicketIcon className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+              <h3 className="text-slate-400 font-medium text-sm sm:text-base uppercase tracking-wider truncate min-w-0">
                 Tickets Sold
               </h3>
             </div>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate">
+            <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight truncate min-w-0">
               {totalTicketsSold.toLocaleString()}
             </div>
           </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
+          <p className="text-xs text-slate-500 font-mono mt-6 uppercase tracking-widest pt-4 border-t border-slate-800/60 truncate min-w-0">
             Across all events
           </p>
         </div>
 
-        <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-amber-500/30 rounded-3xl p-4 sm:p-6 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
+        <div className="min-w-0 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 hover:border-amber-500/30 rounded-3xl p-5 sm:p-6 lg:p-8 shadow-2xl transition-colors group flex flex-col justify-between overflow-hidden">
           <div>
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="p-2.5 sm:p-3 bg-amber-500/10 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
-                <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="flex items-center gap-3 mb-4 sm:mb-5">
+              <div className="p-3 sm:p-4 bg-amber-500/10 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform shrink-0">
+                <CalendarDays className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-wider truncate">
+              <h3 className="text-slate-400 font-medium text-sm sm:text-base uppercase tracking-wider truncate min-w-0">
                 Active Events
               </h3>
             </div>
-            <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate">
+            <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight truncate min-w-0">
               {events.length.toLocaleString()}
             </div>
           </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-widest pt-3 border-t border-slate-800/60 truncate">
+          <p className="text-xs text-slate-500 font-mono mt-6 uppercase tracking-widest pt-4 border-t border-slate-800/60 truncate min-w-0">
             Platform wide assets
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 pt-4">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 pt-4 min-w-0 w-full overflow-hidden">
+        {/* Your Events Section */}
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          <div className="flex items-center justify-between min-w-0 overflow-hidden">
+            <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 sm:gap-3 min-w-0">
               <CalendarDays className="w-5 h-5 text-orange-500 shrink-0" />
               <span className="truncate">Your Events</span>
             </h2>
             {events.length > 0 && (
               <Link
                 href="/studio/events"
-                className="text-xs sm:text-sm font-bold text-orange-500 hover:text-orange-400 transition-colors whitespace-nowrap ml-2"
+                className="text-xs sm:text-sm font-bold text-orange-500 hover:text-orange-400 transition-colors whitespace-nowrap shrink-0 ml-2"
               >
                 View All &rarr;
               </Link>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 min-w-0">
             {events.slice(0, 6).map((event) => (
               <Link
                 key={event.id}
                 href={`/studio/events/${event.id}`}
-                className="block bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 group flex-col h-full"
+                className="block min-w-0 bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-2xl overflow-hidden hover:border-orange-500/50 hover:shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-all duration-300 group flex-col h-full"
               >
-                <div className="h-36 sm:h-40 w-full relative overflow-hidden bg-slate-950">
+                <div className="h-36 sm:h-40 w-full relative overflow-hidden bg-slate-950 shrink-0">
                   {event.imageUrl ? (
                     <img
                       src={event.imageUrl}
@@ -235,29 +257,29 @@ export default async function StudioDashboard() {
                   </div>
                 </div>
 
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
-                  <h3 className="font-bold text-white text-sm sm:text-base leading-snug group-hover:text-orange-400 transition-colors line-clamp-2 mb-4">
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between min-w-0">
+                  <h3 className="font-bold text-white text-sm sm:text-base leading-snug group-hover:text-orange-400 transition-colors line-clamp-2 mb-4 wrap-break-word">
                     {event.title}
                   </h3>
 
-                  <div className="flex items-center justify-between text-xs font-mono pt-4 border-t border-slate-800/60">
-                    <span className="text-slate-400">
+                  <div className="flex items-center justify-between text-xs font-mono pt-4 border-t border-slate-800/60 mt-auto min-w-0">
+                    <span className="text-slate-400 truncate">
                       {new Date(event.date).toLocaleDateString()}
                     </span>
-                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-orange-500 transition-colors shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-orange-500 transition-colors shrink-0 ml-2" />
                   </div>
                 </div>
               </Link>
             ))}
 
             {events.length === 0 && (
-              <div className="sm:col-span-2 text-center p-8 sm:p-12 border border-dashed border-slate-800 rounded-3xl">
-                <p className="text-slate-500 font-medium text-sm">
+              <div className="sm:col-span-2 text-center p-8 sm:p-12 border border-dashed border-slate-800 rounded-3xl min-w-0">
+                <p className="text-slate-500 font-medium text-sm truncate">
                   You haven't created any events yet.
                 </p>
                 <Link
                   href="/studio/events/new"
-                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-xl transition-colors text-xs uppercase tracking-wider whitespace-nowrap"
+                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-slate-950 font-bold rounded-xl transition-colors text-xs uppercase tracking-wider whitespace-nowrap shrink-0"
                 >
                   <Plus className="w-4 h-4" /> Create First Event
                 </Link>
@@ -266,36 +288,37 @@ export default async function StudioDashboard() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 space-y-6">
-          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3">
+        {/* Live Sales Feed Section */}
+        <div className="lg:col-span-1 space-y-6 min-w-0 max-w-full">
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3 min-w-0">
             <TrendingUp className="w-5 h-5 text-emerald-500 shrink-0" />
-            Live Sales Feed
+            <span className="truncate">Live Sales Feed</span>
           </h2>
 
-          <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl overflow-hidden shadow-2xl min-w-0 max-w-full">
             {topRecentBookings.length === 0 ? (
               <div className="p-8 text-center text-slate-500 flex flex-col items-center">
-                <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mb-3 border border-slate-800">
+                <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mb-3 border border-slate-800 shrink-0">
                   <Activity className="w-5 h-5 opacity-40" />
                 </div>
-                <p className="font-bold text-slate-400 text-sm">
+                <p className="font-bold text-slate-400 text-sm truncate min-w-0 max-w-full">
                   No sales telemetry yet.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800/60">
+              <div className="divide-y divide-slate-800/60 min-w-0 w-full">
                 {topRecentBookings.map((booking) => (
                   <div
                     key={booking.id}
-                    className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-slate-800/50 transition-colors"
+                    className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-slate-800/50 transition-colors min-w-0 w-full"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-black text-white text-xs sm:text-sm truncate">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <p className="font-black text-white text-xs sm:text-sm truncate block min-w-0 w-full">
                         {booking.customerName}
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 min-w-0">
+                      <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5 min-w-0 w-full overflow-hidden">
                         <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
-                        <span className="truncate">{booking.eventName}</span>
+                        <span className="truncate min-w-0 flex-1">{booking.eventName}</span>
                       </p>
                     </div>
                     <div className="text-right shrink-0 ml-2">
@@ -315,31 +338,31 @@ export default async function StudioDashboard() {
       </div>
 
       {/* Payout & Settlement History */}
-      <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-4 sm:p-6 shadow-2xl overflow-hidden mt-8">
-        <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3 mb-4 sm:mb-6">
+      <div className="bg-slate-900/80 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-4 sm:p-6 shadow-2xl overflow-hidden mt-8 min-w-0 w-full max-w-full">
+        <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-3 mb-4 sm:mb-6 min-w-0 overflow-hidden">
           <Receipt className="w-5 h-5 text-cyan-500 shrink-0" />
           <span className="truncate">Payout & Settlement History</span>
         </h2>
 
         {payoutHistory.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 flex flex-col items-center">
-            <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mb-3 border border-slate-800">
+          <div className="p-8 text-center text-slate-500 flex flex-col items-center min-w-0">
+            <div className="w-12 h-12 bg-slate-950 rounded-full flex items-center justify-center mb-3 border border-slate-800 shrink-0">
               <Receipt className="w-5 h-5 opacity-40" />
             </div>
-            <p className="font-bold text-slate-400 text-sm">
+            <p className="font-bold text-slate-400 text-sm truncate max-w-full">
               No payout requests yet.
             </p>
           </div>
         ) : (
           <>
             {/* Mobile View: Stacked Cards */}
-            <div className="block md:hidden space-y-3">
+            <div className="block md:hidden space-y-3 min-w-0 w-full max-w-full">
               {payoutHistory.map((payout) => (
                 <div
                   key={payout.id}
-                  className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3"
+                  className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 space-y-3 min-w-0 w-full max-w-full overflow-hidden"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-3 min-w-0">
                     <span className="font-mono text-[10px] text-slate-500 whitespace-nowrap shrink-0">
                       {new Date(payout.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -356,35 +379,26 @@ export default async function StudioDashboard() {
                             : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                       }`}
                     >
-                      {payout.status === "COMPLETED" && (
-                        <CheckCircle2 className="w-3 h-3" />
+                      {payout.status === "COMPLETED" && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                      {payout.status === "FAILED" && <XOctagon className="w-3 h-3 shrink-0" />}
+                      {(payout.status === "PENDING" || payout.status === "PROCESSING") && (
+                        <Clock className="w-3 h-3 shrink-0" />
                       )}
-                      {payout.status === "FAILED" && (
-                        <XOctagon className="w-3 h-3" />
-                      )}
-                      {(payout.status === "PENDING" ||
-                        payout.status === "PROCESSING") && (
-                        <Clock className="w-3 h-3" />
-                      )}
-                      {payout.status === "COMPLETED"
-                        ? "DISBURSED"
-                        : payout.status}
+                      {payout.status === "COMPLETED" ? "DISBURSED" : payout.status}
                     </span>
                   </div>
 
-                  <div className="flex items-end justify-between gap-3 pt-1 border-t border-slate-800/40">
-                    {/* FIXED: The parent div now uses flex-1 and min-w-0 to constrain width */}
-                    <div className="flex-1 min-w-0">
-                      {/* FIXED: Removed w-fit and block span, replaced with standard flex truncation logic */}
-                      <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-slate-400 overflow-hidden w-full">
+                  <div className="flex items-end justify-between gap-4 pt-3 border-t border-slate-800/40 min-w-0 w-full">
+                    <div className="flex-1 min-w-0 max-w-[70%]">
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-900 rounded border border-slate-800 text-[10px] font-mono text-slate-400 w-full overflow-hidden min-w-0">
                         <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
-                        <span className="truncate w-full block">
+                        <span className="truncate block flex-1 min-w-0 w-full">
                           {payout.destination}
                         </span>
                       </div>
-                      <p className="text-[10px] font-mono text-slate-500 mt-2 truncate">
+                      <p className="text-[10px] font-mono text-slate-500 mt-2 truncate min-w-0 w-full">
                         Ref:{" "}
-                        <span className="text-slate-300 font-bold">
+                        <span className="text-slate-300 font-bold truncate">
                           {payout.reference || "-"}
                         </span>
                       </p>
@@ -403,76 +417,64 @@ export default async function StudioDashboard() {
             </div>
 
             {/* Desktop View: Standard Table */}
-            <div className="hidden md:block w-full overflow-x-auto terminal-scroll">
+            <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-slate-800/80 bg-slate-950/30">
               <table className="w-full text-left text-sm text-slate-400 min-w-200">
-                <thead className="text-xs font-mono uppercase bg-slate-950/50 text-slate-500 sticky top-0 z-10">
+                <thead className="text-xs font-mono uppercase bg-slate-950/80 text-slate-500 sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 rounded-tl-xl">Date requested</th>
-                    <th className="px-4 py-3">Destination</th>
-                    <th className="px-4 py-3">Reference</th>
-                    <th className="px-4 py-3 text-right">Amount</th>
-                    <th className="px-4 py-3 rounded-tr-xl">Status</th>
+                    <th className="px-5 py-4 rounded-tl-2xl border-b border-slate-800/80">Date requested</th>
+                    <th className="px-5 py-4 border-b border-slate-800/80">Destination</th>
+                    <th className="px-5 py-4 border-b border-slate-800/80">Reference</th>
+                    <th className="px-5 py-4 text-right border-b border-slate-800/80">Amount</th>
+                    <th className="px-5 py-4 rounded-tr-2xl border-b border-slate-800/80">Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-800/50">
                   {payoutHistory.map((payout) => (
                     <tr
                       key={payout.id}
-                      className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                      className="hover:bg-slate-800/40 transition-colors"
                     >
-                      <td className="px-4 py-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">
-                        {new Date(payout.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          },
-                        )}
+                      <td className="px-5 py-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                        {new Date(payout.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2 py-1 rounded border border-slate-800/60 text-[10px] font-mono text-slate-400 max-w-50 overflow-hidden">
-                          <ArrowRight className="w-3 h-3 text-cyan-500 shrink-0" />
+                      <td className="px-5 py-4">
+                        <div className="bg-slate-950 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-800/60 text-[11px] font-mono text-slate-400 max-w-50 overflow-hidden shadow-inner">
+                          <ArrowRight className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
                           <span className="truncate w-full block">{payout.destination}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[10px] text-slate-500 whitespace-nowrap">
+                      <td className="px-5 py-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
                         {payout.reference ? (
-                          <span className="text-slate-300 font-bold">
-                            {payout.reference}
-                          </span>
+                          <span className="text-slate-300 font-bold">{payout.reference}</span>
                         ) : (
                           "-"
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <p className="font-black text-white text-xs">
+                      <td className="px-5 py-4 text-right whitespace-nowrap">
+                        <p className="font-black text-white text-sm">
                           KES {payout.amount.toLocaleString()}
                         </p>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1.5 rounded text-[9px] font-bold font-mono flex items-center gap-1.5 w-fit uppercase tracking-widest ${
+                          className={`px-2.5 py-1.5 rounded-md text-[10px] font-bold font-mono flex items-center gap-1.5 w-fit uppercase tracking-widest shadow-inner border ${
                             payout.status === "COMPLETED"
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                               : payout.status === "FAILED"
-                                ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                           }`}
                         >
-                          {payout.status === "COMPLETED" && (
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          )}
-                          {payout.status === "FAILED" && (
-                            <XOctagon className="w-3.5 h-3.5" />
-                          )}
-                          {(payout.status === "PENDING" ||
-                            payout.status === "PROCESSING") && (
+                          {payout.status === "COMPLETED" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          {payout.status === "FAILED" && <XOctagon className="w-3.5 h-3.5" />}
+                          {(payout.status === "PENDING" || payout.status === "PROCESSING") && (
                             <Clock className="w-3.5 h-3.5" />
                           )}
-                          {payout.status === "COMPLETED"
-                            ? "DISBURSED"
-                            : payout.status}
+                          {payout.status === "COMPLETED" ? "DISBURSED" : payout.status}
                         </span>
                       </td>
                     </tr>
@@ -484,13 +486,12 @@ export default async function StudioDashboard() {
         )}
       </div>
 
-      <footer className="mt-16 sm:mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <p className="text-[10px] text-slate-500 font-mono">
-            &copy; {new Date().getFullYear()} Bamba Tickets Corporation. All
-            rights reserved.
+      <footer className="mt-16 sm:mt-24 border-t border-slate-800/60 py-8 bg-transparent relative z-50 min-w-0">
+        <div className="max-w-7xl mx-auto flex flex-col-reverse sm:flex-row items-center justify-between gap-4 text-center sm:text-left min-w-0">
+          <p className="text-[10px] text-slate-500 font-mono truncate min-w-0">
+            &copy; {new Date().getFullYear()} Bamba Tickets Corporation. All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 shrink-0">
             <Link
               href="/terms"
               className="text-[10px] sm:text-xs font-mono font-bold text-slate-300 hover:text-orange-500 uppercase tracking-widest transition-colors"

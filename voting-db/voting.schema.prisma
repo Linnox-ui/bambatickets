@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma-voting" 
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model Campaign {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String      @unique @db.VarChar(255)
+  title      String      @db.VarChar(255)
+  is_active  Boolean     @default(true)
+  created_at DateTime?   @default(now()) @db.Timestamp(6)
+  host_id     String?
+  
+  candidates Candidate[]
+  votes      Vote[]
+
+  @@map("campaigns")
+}
+
+model Candidate {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id String?   @db.Uuid
+  name        String    @db.VarChar(255)
+  image_url   String?
+  total_votes Int?      @default(0)
+  
+  campaign    Campaign? @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  votes       Vote[]
+
+  @@map("candidates")
+}
+
+model Vote {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id  String?    @db.Uuid
+  candidate_id String?    @db.Uuid
+  user_email   String?    @db.VarChar(255)
+  device_hash  String?    @db.VarChar(255)
+  created_at   DateTime?  @default(now()) @db.Timestamp(6)
+  
+  campaign     Campaign?  @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  candidate    Candidate? @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([campaign_id, user_email], map: "unique_user_vote")
+  @@unique([campaign_id, device_hash], map: "unique_device_vote")
+  @@map("votes")
+}

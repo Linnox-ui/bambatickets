@@ -11,6 +11,7 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  Trophy, // ✨ ADDED: Trophy icon imported
 } from "lucide-react";
 
 type NavbarProps = {
@@ -138,7 +139,6 @@ export default function Navbar({
             </>
           ) : (
             <div className="flex items-center gap-2 sm:gap-4 pl-2 sm:pl-4 sm:border-l sm:border-slate-800/80">
-              {/* Name & Role (Restored to normal visibility) */}
               <div className="flex flex-col items-end">
                 <span className="text-xs font-bold text-white tracking-wide truncate max-w-20 sm:max-w-30">
                   {session?.user?.firstName || "User"}
@@ -164,9 +164,20 @@ export default function Navbar({
           )}
         </div>
 
-        {/* Search Block & Studio Button */}
-        <div className="order-3 sm:order-2 w-full sm:flex-1 sm:max-w-md px-1 sm:px-4 flex gap-2 items-center">
-          {/* Studio Button placed in front of search bar */}
+        {/* Search Block & Navigation Links */}
+        <div className="order-3 sm:order-2 w-full sm:flex-1 sm:max-w-lg px-1 sm:px-4 flex gap-2 items-center">
+          
+          {/* ✨ ADDED: Polls / Voting Center Button */}
+          <Link
+            href="/polls"
+            title="Voting Center"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 sm:py-2.5 bg-slate-900 border border-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-orange-400 rounded-full transition-all text-xs font-bold shadow-inner shrink-0"
+          >
+            <Trophy className="w-4 h-4 text-orange-500" />
+            <span className="hidden sm:inline">Polls</span>
+          </Link>
+
+          {/* Studio Button (Only for Organizers) */}
           {session?.user?.role === "ORGANIZER" && (
             <Link
               href="/studio"
@@ -178,6 +189,7 @@ export default function Navbar({
             </Link>
           )}
 
+          {/* Search Input */}
           <div className="relative w-full group flex-1">
             <Search
               className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors duration-300 ${searchQuery ? "text-orange-500" : "text-slate-400 group-focus-within:text-orange-500"}`}

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { PrismaClient as VotingPrismaClient } from "../../../generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import Link from "next/link";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Users, Activity, Crown } from "lucide-react";
 import VotingCard from "./VotingCard";
 
 const adapter = new PrismaNeon({ connectionString: process.env.VOTING_DATABASE_URL! });
@@ -40,6 +40,14 @@ export default async function PublicPollPage({
 
   // Find the highest vote count to determine the current leader
   const highestVotes = Math.max(...campaign.candidates.map(c => c.total_votes || 0));
+  
+  // Identify the leading candidate(s) safely
+  const leader = campaign.candidates.find(c => c.total_votes === highestVotes);
+  
+  // Calculate the leader's percentage of the total votes
+  const leaderPercentage = totalCampaignVotes > 0 
+    ? Math.round((highestVotes / totalCampaignVotes) * 100) 
+    : 0;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500/30 selection:text-orange-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -51,30 +59,73 @@ export default async function PublicPollPage({
 
       <div className="max-w-6xl mx-auto relative z-10 animate-fade-in-up">
         
-        {/* Navigation & Header */}
-        <div className="mb-12">
-          <Link
-            href="/polls"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 hover:border-orange-500/50 transition-all text-xs font-bold text-slate-400 mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Hub
-          </Link>
+        {/* Navigation */}
+        <Link
+          href="/polls"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 hover:border-orange-500/50 transition-all text-xs font-bold text-slate-400 mb-8"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Hub
+        </Link>
 
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center justify-center p-3 bg-orange-500/10 text-orange-500 rounded-2xl mb-6 shadow-inner border border-orange-500/20">
-              <Trophy className="w-8 h-8" />
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-4 wrap-break-word">
+        {/* --- ENHANCED HEADER & ANALYTICS STRIP --- */}
+        <div className="text-center max-w-4xl mx-auto mb-16">
+          
+          <div className="relative group inline-block mb-6">
+            <div className="absolute inset-0 bg-orange-500/20 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-linear-to-r from-white via-slate-100 to-slate-400 drop-shadow-sm relative z-10 transition-transform duration-500 hover:scale-[1.02] wrap-break-word">
               {campaign.title}
             </h1>
-            <p className="text-slate-400 text-lg">
-              Select your favorite nominee below and cast your vote securely.
-            </p>
+          </div>
+          
+          <p className="text-slate-400 text-lg sm:text-xl font-medium mb-8">
+            Select your favorite nominee below and cast your vote securely.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <Users className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none mb-1">Nominees</span>
+                <span className="text-lg font-black text-slate-200 leading-none">{campaign.candidates.length}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner">
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <Activity className="w-5 h-5 text-orange-400" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none mb-1">Total Votes</span>
+                <span className="text-lg font-black text-slate-200 leading-none">{totalCampaignVotes.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {totalCampaignVotes > 0 && leader && (
+              <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner">
+                <div className="p-2 bg-yellow-500/10 rounded-lg">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none mb-1">Current Leader</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-black text-slate-200 leading-none truncate max-w-30">
+                      {leader.name.split(" ")[0]}
+                    </span>
+                    <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded-md border border-yellow-500/20">
+                      {leaderPercentage}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+        {/* --------------------------------------- */}
 
         {/* Voting Grid */}
-       <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
           {campaign.candidates.map((candidate) => {
             const candidateVotes = candidate.total_votes || 0;
             const isLeader = candidateVotes > 0 && candidateVotes === highestVotes;
@@ -86,7 +137,6 @@ export default async function PublicPollPage({
                 candidateId={candidate.id}
                 candidateName={candidate.name}
                 imageUrl={candidate.image_url}
-                // NEW PROPS PASSED DOWN
                 candidateVotes={candidateVotes}
                 totalCampaignVotes={totalCampaignVotes}
                 isLeader={isLeader}

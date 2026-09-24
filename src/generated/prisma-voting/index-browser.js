@@ -126,7 +126,9 @@ exports.Prisma.CampaignScalarFieldEnum = {
   title: 'title',
   is_active: 'is_active',
   created_at: 'created_at',
-  host_id: 'host_id'
+  host_id: 'host_id',
+  start_date: 'start_date',
+  end_date: 'end_date'
 };
 
 exports.Prisma.CandidateScalarFieldEnum = {

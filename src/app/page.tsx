@@ -84,38 +84,7 @@ export default async function PublicHomePage() {
 
       <EventBrowser initialEvents={events} />
 
-      {/* --- NEW VOTING HUB TEASER STRIP --- */}
-      <div 
-        className="relative z-10 max-w-7xl mx-auto px-4 mt-8 mb-12 animate-fade-in-up" 
-        style={{ animationDelay: '0.8s' }}
-      >
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/60 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group hover:border-orange-500/30 transition-colors duration-500">
-          <div className="absolute inset-0 bg-linear-to-r from-orange-500/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          <div className="relative z-10 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-slate-100 flex items-center justify-center md:justify-start gap-3">
-              <span className="text-orange-500 animate-float inline-block">🏆</span> 
-              BambaTickets Voting Center
-            </h2>
-            <p className="text-slate-400 mt-2 max-w-xl text-sm leading-relaxed">
-              Have your say in the latest community polls and awards. Support your favorite creators, artists, and nominees in a secure, transparent voting environment.
-            </p>
-          </div>
-
-          <Link 
-            href="/polls"
-            className="relative z-10 shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-orange-500/50 text-slate-100 font-mono text-xs uppercase tracking-widest rounded-lg transition-all duration-300"
-          >
-            <span>View Active Polls</span>
-            <svg className="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
-        </div>
-      </div>
-      {/* ----------------------------------- */}
-
-      <footer className="border-t border-slate-800/60 py-8 bg-transparent relative z-50">
+      <footer className="border-t border-slate-800/60 py-8 bg-transparent relative z-50 mt-12">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[10px] text-slate-500 font-mono">
             &copy; {new Date().getFullYear()} Bamba Tickets Corporation. All
@@ -131,7 +100,6 @@ export default async function PublicHomePage() {
               </Link>
             )}
             
-            {/* Added Voting Link to Footer */}
             <Link
               href="/polls"
               className="text-xs font-mono font-bold text-slate-300 hover:text-orange-500 uppercase tracking-widest transition-colors"

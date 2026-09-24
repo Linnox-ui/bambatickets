@@ -1,42 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createCampaignAction } from "@/src/actions/create-campaign";
-import { CalendarClock, Timer } from "lucide-react"; // ✨ NEW ICONS
-import { toast } from "sonner"; // ✨ USING SONNER
+import { editCampaignAction } from "@/src/actions/edit-campaign";
+import { CalendarClock, Timer } from "lucide-react"; // ✨ NEW
+import { toast } from "sonner"; // ✨ NEW
 
-type CandidateInput = { name: string; file: File | null; preview: string };
+type CandidateInput = { id?: string; name: string; file: File | null; preview: string };
 
-export default function CreatePollForm() {
+// Helper to convert DB ISO string to HTML datetime-local format
+const formatForInput = (isoString: string) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
+export default function EditPollForm({ initialCampaign }: { initialCampaign: any }) {
   const router = useRouter();
   
-  // --- PRE-CALCULATE DATES FOR GOOD UX ---
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [title, setTitle] = useState(initialCampaign.title);
+  const [slug] = useState(initialCampaign.slug); 
+  
+  // ✨ PRE-POPULATE DATES FROM DB
+  const [startDate, setStartDate] = useState(formatForInput(initialCampaign.start_date));
+  const [endDate, setEndDate] = useState(formatForInput(initialCampaign.end_date));
 
-  useEffect(() => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    setStartDate(now.toISOString().slice(0, 16)); // Format: YYYY-MM-DDThh:mm
-
-    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    setEndDate(nextWeek.toISOString().slice(0, 16));
-  }, []);
-
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [candidates, setCandidates] = useState<CandidateInput[]>([
-    { name: "", file: null, preview: "" },
-    { name: "", file: null, preview: "" }
-  ]);
+  const [candidates, setCandidates] = useState<CandidateInput[]>(
+    initialCampaign.candidates.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      file: null,
+      preview: c.image_url || "",
+    }))
+  );
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleTitleChange = (val: string) => {
-    setTitle(val);
-    setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""));
-  };
 
   const handleCandidateName = (index: number, name: string) => {
     const newCands = [...candidates];
@@ -79,32 +79,35 @@ export default function CreatePollForm() {
       return;
     }
 
-    const toastId = toast.loading("Launching campaign...");
+    const toastId = toast.loading("Saving changes...");
 
     const formData = new FormData();
+    formData.append("campaignId", initialCampaign.id);
     formData.append("title", title);
-    formData.append("slug", slug);
-    formData.append("startDate", new Date(startDate).toISOString()); // ✨ NEW
-    formData.append("endDate", new Date(endDate).toISOString());     // ✨ NEW
+    formData.append("startDate", new Date(startDate).toISOString()); // ✨ APPEND
+    formData.append("endDate", new Date(endDate).toISOString());     // ✨ APPEND
     formData.append("candidateCount", validCandidates.length.toString());
 
     validCandidates.forEach((c, index) => {
       formData.append(`candidate_${index}_name`, c.name);
+      if (c.id) {
+        formData.append(`candidate_${index}_id`, c.id);
+      }
       if (c.file) {
         formData.append(`candidate_${index}_image`, c.file);
       }
     });
 
     try {
-      const result = await createCampaignAction(formData);
+      const result = await editCampaignAction(formData);
       
       if (result.error) throw new Error(result.error);
 
-      toast.success("Campaign is live!", { id: toastId });
-      router.push(`/polls/${result.slug}`);
+      toast.success("Campaign updated successfully!", { id: toastId });
+      router.push(`/polls/dashboard`);
     } catch (err: any) {
       setError(err.message);
-      toast.error("Launch failed.", { id: toastId });
+      toast.error("Failed to update campaign.", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -125,31 +128,31 @@ export default function CreatePollForm() {
             type="text"
             required
             value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="e.g. Creator of the Year"
+            onChange={(e) => setTitle(e.target.value)}
             className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">URL Slug</label>
-          <div className="flex rounded-xl bg-slate-900 border border-slate-800 focus-within:border-orange-500/50 focus-within:ring-1 focus-within:ring-orange-500/50 transition-all overflow-hidden">
-            <span className="flex items-center px-4 bg-slate-800/50 text-slate-500 text-sm">
+          <label className="block text-sm font-medium text-slate-500 mb-1.5 items-center justify-between">
+            <span>URL Slug (Locked)</span>
+          </label>
+          <div className="flex rounded-xl bg-slate-900/50 border border-slate-800 overflow-hidden opacity-70 cursor-not-allowed">
+            <span className="flex items-center px-4 bg-slate-800/30 text-slate-500 text-sm">
               bambatickets.com/polls/
             </span>
             <input
               type="text"
-              required
+              readOnly
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-              className="w-full bg-transparent text-slate-100 px-4 py-3 focus:outline-none"
+              className="w-full bg-transparent text-slate-400 px-4 py-3 focus:outline-none cursor-not-allowed"
             />
           </div>
         </div>
 
-        {/* ✨ NEW: TIMELINE GRID */}
+        {/* ✨ TIMELINE GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-          <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
+          <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60 focus-within:border-emerald-500/50 transition-colors">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
               <CalendarClock className="w-4 h-4 text-emerald-400" />
               Goes Live At
@@ -163,7 +166,7 @@ export default function CreatePollForm() {
             />
           </div>
           
-          <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
+          <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60 focus-within:border-orange-500/50 transition-colors">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-3">
               <Timer className="w-4 h-4 text-orange-500" />
               Closes At
@@ -182,7 +185,7 @@ export default function CreatePollForm() {
       <div className="pt-6 border-t border-slate-800">
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-medium text-slate-300">Nominees</label>
-          <span className="text-xs text-slate-500 font-mono">Tap avatar to add photo</span>
+          <span className="text-xs text-slate-500 font-mono">Tap avatar to change photo</span>
         </div>
         
         <div className="space-y-3">
@@ -256,10 +259,10 @@ export default function CreatePollForm() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
-            Launching Campaign...
+            Saving Changes...
           </>
         ) : (
-          "Launch Campaign"
+          "Save Changes"
         )}
       </button>
     </form>

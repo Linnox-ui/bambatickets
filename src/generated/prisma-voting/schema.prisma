@@ -17,6 +17,8 @@ model Campaign {
 
   candidates Candidate[]
   votes      Vote[]
+  start_date DateTime    @default(now())
+  end_date   DateTime
 
   @@map("campaigns")
 }

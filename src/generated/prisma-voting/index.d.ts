@@ -1163,6 +1163,8 @@ export namespace Prisma {
     is_active: boolean | null
     created_at: Date | null
     host_id: string | null
+    start_date: Date | null
+    end_date: Date | null
   }
 
   export type CampaignMaxAggregateOutputType = {
@@ -1172,6 +1174,8 @@ export namespace Prisma {
     is_active: boolean | null
     created_at: Date | null
     host_id: string | null
+    start_date: Date | null
+    end_date: Date | null
   }
 
   export type CampaignCountAggregateOutputType = {
@@ -1181,6 +1185,8 @@ export namespace Prisma {
     is_active: number
     created_at: number
     host_id: number
+    start_date: number
+    end_date: number
     _all: number
   }
 
@@ -1192,6 +1198,8 @@ export namespace Prisma {
     is_active?: true
     created_at?: true
     host_id?: true
+    start_date?: true
+    end_date?: true
   }
 
   export type CampaignMaxAggregateInputType = {
@@ -1201,6 +1209,8 @@ export namespace Prisma {
     is_active?: true
     created_at?: true
     host_id?: true
+    start_date?: true
+    end_date?: true
   }
 
   export type CampaignCountAggregateInputType = {
@@ -1210,6 +1220,8 @@ export namespace Prisma {
     is_active?: true
     created_at?: true
     host_id?: true
+    start_date?: true
+    end_date?: true
     _all?: true
   }
 
@@ -1292,6 +1304,8 @@ export namespace Prisma {
     is_active: boolean
     created_at: Date | null
     host_id: string | null
+    start_date: Date
+    end_date: Date
     _count: CampaignCountAggregateOutputType | null
     _min: CampaignMinAggregateOutputType | null
     _max: CampaignMaxAggregateOutputType | null
@@ -1318,6 +1332,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: boolean
     host_id?: boolean
+    start_date?: boolean
+    end_date?: boolean
     candidates?: boolean | Campaign$candidatesArgs<ExtArgs>
     votes?: boolean | Campaign$votesArgs<ExtArgs>
     _count?: boolean | CampaignCountOutputTypeDefaultArgs<ExtArgs>
@@ -1330,6 +1346,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: boolean
     host_id?: boolean
+    start_date?: boolean
+    end_date?: boolean
   }, ExtArgs["result"]["campaign"]>
 
   export type CampaignSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1339,6 +1357,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: boolean
     host_id?: boolean
+    start_date?: boolean
+    end_date?: boolean
   }, ExtArgs["result"]["campaign"]>
 
   export type CampaignSelectScalar = {
@@ -1348,9 +1368,11 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: boolean
     host_id?: boolean
+    start_date?: boolean
+    end_date?: boolean
   }
 
-  export type CampaignOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "title" | "is_active" | "created_at" | "host_id", ExtArgs["result"]["campaign"]>
+  export type CampaignOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "title" | "is_active" | "created_at" | "host_id" | "start_date" | "end_date", ExtArgs["result"]["campaign"]>
   export type CampaignInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     candidates?: boolean | Campaign$candidatesArgs<ExtArgs>
     votes?: boolean | Campaign$votesArgs<ExtArgs>
@@ -1372,6 +1394,8 @@ export namespace Prisma {
       is_active: boolean
       created_at: Date | null
       host_id: string | null
+      start_date: Date
+      end_date: Date
     }, ExtArgs["result"]["campaign"]>
     composites: {}
   }
@@ -1803,6 +1827,8 @@ export namespace Prisma {
     readonly is_active: FieldRef<"Campaign", 'Boolean'>
     readonly created_at: FieldRef<"Campaign", 'DateTime'>
     readonly host_id: FieldRef<"Campaign", 'String'>
+    readonly start_date: FieldRef<"Campaign", 'DateTime'>
+    readonly end_date: FieldRef<"Campaign", 'DateTime'>
   }
     
 
@@ -4550,7 +4576,9 @@ export namespace Prisma {
     title: 'title',
     is_active: 'is_active',
     created_at: 'created_at',
-    host_id: 'host_id'
+    host_id: 'host_id',
+    start_date: 'start_date',
+    end_date: 'end_date'
   };
 
   export type CampaignScalarFieldEnum = (typeof CampaignScalarFieldEnum)[keyof typeof CampaignScalarFieldEnum]
@@ -4684,6 +4712,8 @@ export namespace Prisma {
     is_active?: BoolFilter<"Campaign"> | boolean
     created_at?: DateTimeNullableFilter<"Campaign"> | Date | string | null
     host_id?: StringNullableFilter<"Campaign"> | string | null
+    start_date?: DateTimeFilter<"Campaign"> | Date | string
+    end_date?: DateTimeFilter<"Campaign"> | Date | string
     candidates?: CandidateListRelationFilter
     votes?: VoteListRelationFilter
   }
@@ -4695,6 +4725,8 @@ export namespace Prisma {
     is_active?: SortOrder
     created_at?: SortOrderInput | SortOrder
     host_id?: SortOrderInput | SortOrder
+    start_date?: SortOrder
+    end_date?: SortOrder
     candidates?: CandidateOrderByRelationAggregateInput
     votes?: VoteOrderByRelationAggregateInput
   }
@@ -4709,6 +4741,8 @@ export namespace Prisma {
     is_active?: BoolFilter<"Campaign"> | boolean
     created_at?: DateTimeNullableFilter<"Campaign"> | Date | string | null
     host_id?: StringNullableFilter<"Campaign"> | string | null
+    start_date?: DateTimeFilter<"Campaign"> | Date | string
+    end_date?: DateTimeFilter<"Campaign"> | Date | string
     candidates?: CandidateListRelationFilter
     votes?: VoteListRelationFilter
   }, "id" | "slug">
@@ -4720,6 +4754,8 @@ export namespace Prisma {
     is_active?: SortOrder
     created_at?: SortOrderInput | SortOrder
     host_id?: SortOrderInput | SortOrder
+    start_date?: SortOrder
+    end_date?: SortOrder
     _count?: CampaignCountOrderByAggregateInput
     _max?: CampaignMaxOrderByAggregateInput
     _min?: CampaignMinOrderByAggregateInput
@@ -4735,6 +4771,8 @@ export namespace Prisma {
     is_active?: BoolWithAggregatesFilter<"Campaign"> | boolean
     created_at?: DateTimeNullableWithAggregatesFilter<"Campaign"> | Date | string | null
     host_id?: StringNullableWithAggregatesFilter<"Campaign"> | string | null
+    start_date?: DateTimeWithAggregatesFilter<"Campaign"> | Date | string
+    end_date?: DateTimeWithAggregatesFilter<"Campaign"> | Date | string
   }
 
   export type CandidateWhereInput = {
@@ -4869,6 +4907,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     candidates?: CandidateCreateNestedManyWithoutCampaignInput
     votes?: VoteCreateNestedManyWithoutCampaignInput
   }
@@ -4880,6 +4920,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     candidates?: CandidateUncheckedCreateNestedManyWithoutCampaignInput
     votes?: VoteUncheckedCreateNestedManyWithoutCampaignInput
   }
@@ -4891,6 +4933,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     candidates?: CandidateUpdateManyWithoutCampaignNestedInput
     votes?: VoteUpdateManyWithoutCampaignNestedInput
   }
@@ -4902,6 +4946,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     candidates?: CandidateUncheckedUpdateManyWithoutCampaignNestedInput
     votes?: VoteUncheckedUpdateManyWithoutCampaignNestedInput
   }
@@ -4913,6 +4959,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
   }
 
   export type CampaignUpdateManyMutationInput = {
@@ -4922,6 +4970,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CampaignUncheckedUpdateManyInput = {
@@ -4931,6 +4981,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CandidateCreateInput = {
@@ -5111,6 +5163,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
   export type CandidateListRelationFilter = {
     every?: CandidateWhereInput
     some?: CandidateWhereInput
@@ -5143,6 +5206,8 @@ export namespace Prisma {
     is_active?: SortOrder
     created_at?: SortOrder
     host_id?: SortOrder
+    start_date?: SortOrder
+    end_date?: SortOrder
   }
 
   export type CampaignMaxOrderByAggregateInput = {
@@ -5152,6 +5217,8 @@ export namespace Prisma {
     is_active?: SortOrder
     created_at?: SortOrder
     host_id?: SortOrder
+    start_date?: SortOrder
+    end_date?: SortOrder
   }
 
   export type CampaignMinOrderByAggregateInput = {
@@ -5161,6 +5228,8 @@ export namespace Prisma {
     is_active?: SortOrder
     created_at?: SortOrder
     host_id?: SortOrder
+    start_date?: SortOrder
+    end_date?: SortOrder
   }
 
   export type UuidWithAggregatesFilter<$PrismaModel = never> = {
@@ -5234,6 +5303,20 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type UuidNullableFilter<$PrismaModel = never> = {
@@ -5411,6 +5494,10 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
   }
 
   export type CandidateUpdateManyWithoutCampaignNestedInput = {
@@ -5622,6 +5709,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedDateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
   export type NestedUuidWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -5712,6 +5810,20 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedUuidNullableFilter<$PrismaModel = never> = {
@@ -5880,6 +5992,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     votes?: VoteCreateNestedManyWithoutCampaignInput
   }
 
@@ -5890,6 +6004,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     votes?: VoteUncheckedCreateNestedManyWithoutCampaignInput
   }
 
@@ -5942,6 +6058,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     votes?: VoteUpdateManyWithoutCampaignNestedInput
   }
 
@@ -5952,6 +6070,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     votes?: VoteUncheckedUpdateManyWithoutCampaignNestedInput
   }
 
@@ -5978,6 +6098,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     candidates?: CandidateCreateNestedManyWithoutCampaignInput
   }
 
@@ -5988,6 +6110,8 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string | null
     host_id?: string | null
+    start_date?: Date | string
+    end_date: Date | string
     candidates?: CandidateUncheckedCreateNestedManyWithoutCampaignInput
   }
 
@@ -6035,6 +6159,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     candidates?: CandidateUpdateManyWithoutCampaignNestedInput
   }
 
@@ -6045,6 +6171,8 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     host_id?: NullableStringFieldUpdateOperationsInput | string | null
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
     candidates?: CandidateUncheckedUpdateManyWithoutCampaignNestedInput
   }
 

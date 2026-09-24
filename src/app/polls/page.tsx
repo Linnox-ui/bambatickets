@@ -6,7 +6,7 @@ import { auth } from "@/src/auth";
 const adapter = new PrismaNeon({ connectionString: process.env.VOTING_DATABASE_URL! });
 const votingPrisma = new VotingPrismaClient({ adapter });
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function PollsIndexPage({
   searchParams,

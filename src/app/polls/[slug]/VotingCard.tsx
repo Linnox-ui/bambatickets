@@ -10,7 +10,8 @@ import {
   AlertCircle, 
   Share2, 
   ArrowRight, 
-  ArrowLeft 
+  ArrowLeft,
+  Lock
 } from "lucide-react";
 
 interface VotingCardProps {
@@ -21,6 +22,8 @@ interface VotingCardProps {
   candidateVotes: number;
   totalCampaignVotes: number;
   isLeader: boolean;
+  isClosed: boolean;     // ✨ NEW
+  isUpcoming: boolean;   // ✨ NEW
 }
 
 export default function VotingCard({ 
@@ -30,43 +33,40 @@ export default function VotingCard({
   imageUrl,
   candidateVotes,
   totalCampaignVotes,
-  isLeader
+  isLeader,
+  isClosed,
+  isUpcoming
 }: VotingCardProps) {
-  // --- UI STATES ---
   const [showForm, setShowForm] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   
-  // --- FUNCTIONAL STATES ---
   const [email, setEmail] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   
-  // --- SHARING URL ---
   const [currentUrl, setCurrentUrl] = useState("");
+  
   useEffect(() => {
     setCurrentUrl(window.location.href);
   }, []);
 
-  // --- MUTUAL EXCLUSIVITY LOGIC (Closes other cards when this one opens) ---
   useEffect(() => {
     const handleOtherCardOpened = (e: Event) => {
       const customEvent = e as CustomEvent;
-      // If another card broadcasted its ID, and it's not THIS card, close this form
       if (customEvent.detail !== candidateId) {
         setShowForm(false);
-        // Optional: clear security token if hidden to save memory
         if (status !== "success") setTurnstileToken(null); 
       }
     };
-
     window.addEventListener("voting-card-opened", handleOtherCardOpened);
     return () => window.removeEventListener("voting-card-opened", handleOtherCardOpened);
   }, [candidateId, status]);
 
   const handleExpandForm = () => {
+    // Prevent opening form if closed or upcoming (extra safety)
+    if (isClosed || isUpcoming) return;
     setShowForm(true);
-    // Broadcast to all other cards that this specific candidate was clicked
     window.dispatchEvent(new CustomEvent("voting-card-opened", { detail: candidateId }));
   };
 
@@ -77,16 +77,13 @@ export default function VotingCard({
     setTurnstileToken(null);
   };
 
-  // --- SUBMIT LOGIC (PRESERVED) ---
   const handleVote = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!turnstileToken) {
       setStatus("error");
       setMessage("Security check in progress. Please wait a second and try again.");
       return;
     }
-
     setStatus("loading");
     setMessage("");
 
@@ -108,10 +105,7 @@ export default function VotingCard({
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to process vote.");
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to process vote.");
 
       setStatus("success");
       setMessage("Success! Your vote has been securely recorded.");
@@ -126,10 +120,10 @@ export default function VotingCard({
   const displayVotes = status === "success" ? candidateVotes + 1 : candidateVotes;
   const displayTotal = status === "success" ? totalCampaignVotes + 1 : totalCampaignVotes;
   const percentage = displayTotal > 0 ? Math.round((displayVotes / displayTotal) * 100) : 0;
-
   const hasValidImage = imageUrl && imageUrl.trim() !== "" && !imageFailed;
-
-  const shareText = `I just voted for ${candidateName}! 🏆 Help them win on Bamba Tickets!`;
+  const shareText = isClosed 
+    ? `Check out the final results for ${candidateName} on Bamba Tickets! 🏆` 
+    : `I just voted for ${candidateName}! 🏆 Help them win on Bamba Tickets!`;
   
   const handleXShare = () => {
     const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(currentUrl)}`;
@@ -141,8 +135,11 @@ export default function VotingCard({
     window.open(waUrl, '_blank');
   };
 
+  // ✨ NEW: Logical flag to show the stats instead of the vote button
+  const showStatsBlock = status === "success" || isClosed;
+
   return (
-    <div className="bg-slate-900 border border-slate-800/80 rounded-4xl flex flex-col transition-all duration-500 hover:-translate-y-2 hover:border-orange-500/40 hover:shadow-[0_20px_40px_rgb(249,115,22,0.15)] relative overflow-hidden group w-full max-w-85 min-w-0">
+    <div className={`bg-slate-900 border ${isClosed && isLeader ? 'border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.15)]' : 'border-slate-800/80'} rounded-4xl flex flex-col transition-all duration-500 hover:-translate-y-2 hover:border-orange-500/40 relative overflow-hidden group w-full max-w-85 min-w-0`}>
       
       {/* BACKGROUND */}
       <div className="absolute top-0 left-0 w-full h-48 bg-slate-950 overflow-hidden pointer-events-none">
@@ -167,13 +164,13 @@ export default function VotingCard({
               src={imageUrl} 
               alt={candidateName} 
               onError={() => setImageFailed(true)}
-              className="w-full h-full rounded-full object-cover border-4 border-slate-900 shadow-2xl bg-slate-800 relative z-10"
+              className={`w-full h-full rounded-full object-cover border-4 ${isClosed && isLeader ? 'border-yellow-500' : 'border-slate-900'} shadow-2xl bg-slate-800 relative z-10`}
             />
             <div className="absolute inset-0 rounded-full border border-orange-500/30 scale-110 pointer-events-none group-hover:scale-125 transition-transform duration-700 opacity-0 group-hover:opacity-100" />
           </div>
         ) : (
-          <div className="w-32 h-32 rounded-full border-4 border-slate-900 shadow-2xl bg-linear-to-br from-slate-800 to-slate-950 flex items-center justify-center relative z-10">
-            <span className="text-5xl font-black text-slate-600 uppercase tracking-tighter">
+          <div className={`w-32 h-32 rounded-full border-4 ${isClosed && isLeader ? 'border-yellow-500 text-yellow-500' : 'border-slate-900 text-slate-600'} shadow-2xl bg-linear-to-br from-slate-800 to-slate-950 flex items-center justify-center relative z-10`}>
+            <span className="text-5xl font-black uppercase tracking-tighter">
               {candidateName.charAt(0)}
             </span>
           </div>
@@ -187,18 +184,32 @@ export default function VotingCard({
       {/* DYNAMIC ACTION AREA */}
       <div className="flex-1 flex flex-col justify-end p-6 pt-2 relative z-10 min-w-0 w-full min-h-45">
         
-        {status === "success" ? (
-          /* SUCCESS STATE */
+        {showStatsBlock ? (
+          /* SUCCESS OR FINAL RESULTS STATE */
           <div className="animate-fade-in-up space-y-4 min-w-0">
-            <div className="flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 py-3 rounded-2xl border border-emerald-500/20 w-full shadow-inner">
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span className="text-xs font-bold uppercase tracking-widest text-center truncate">Vote Counted</span>
-            </div>
+            
+            {/* Dynamic Status Banner */}
+            {status === "success" ? (
+              <div className="flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 py-3 rounded-2xl border border-emerald-500/20 w-full shadow-inner">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-widest text-center truncate">Vote Counted</span>
+              </div>
+            ) : (isClosed && isLeader) ? (
+              <div className="flex items-center justify-center gap-2 text-yellow-500 bg-yellow-500/10 py-3 rounded-2xl border border-yellow-500/20 w-full shadow-inner">
+                <Trophy className="w-5 h-5 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-widest text-center truncate">Winner</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 text-slate-400 bg-slate-800/50 py-3 rounded-2xl border border-slate-700/50 w-full shadow-inner">
+                <span className="text-xs font-bold uppercase tracking-widest text-center truncate">Final Result</span>
+              </div>
+            )}
 
             <div className="bg-slate-950/70 rounded-2xl p-5 border border-slate-800/50 w-full backdrop-blur-md">
               <div className="flex justify-between items-end text-sm mb-3 min-w-0">
                 <span className="font-mono text-slate-400 uppercase tracking-widest text-[10px] flex items-center gap-1.5 shrink-0">
-                  <Trophy className="w-3 h-3 text-orange-500" /> Standings
+                  <Trophy className={`w-3 h-3 ${isClosed && isLeader ? 'text-yellow-500' : 'text-orange-500'}`} /> 
+                  {isClosed ? 'Final Score' : 'Standings'}
                 </span>
                 <div className="text-right shrink-0">
                   <span className="font-black text-white text-2xl mr-1.5">{percentage}%</span>
@@ -209,7 +220,9 @@ export default function VotingCard({
               <div className="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800/60 shadow-inner">
                 <div 
                   className={`h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden ${
-                    isLeader || status === "success" ? "bg-linear-to-r from-orange-600 to-orange-400" : "bg-slate-700"
+                    (isLeader || status === "success") 
+                      ? (isClosed && isLeader ? "bg-linear-to-r from-yellow-500 to-yellow-300" : "bg-linear-to-r from-orange-600 to-orange-400") 
+                      : "bg-slate-700"
                   }`}
                   style={{ width: `${percentage}%` }}
                 >
@@ -228,6 +241,18 @@ export default function VotingCard({
                 WhatsApp
               </button>
             </div>
+          </div>
+
+        ) : isUpcoming ? (
+          /* UPCOMING STATE */
+          <div className="mt-auto animate-fade-in-up">
+            <button
+              disabled
+              className="w-full py-4 bg-slate-900/50 text-slate-500 font-bold uppercase tracking-widest text-sm rounded-2xl border border-slate-800 flex items-center justify-center gap-2 cursor-not-allowed"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Opens Soon</span>
+            </button>
           </div>
 
         ) : showForm ? (

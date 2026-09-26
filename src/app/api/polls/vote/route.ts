@@ -16,7 +16,6 @@ export async function POST(req: Request) {
     }
 
     // 2. Cloudflare Turnstile Bot Verification
-    // This makes a server-to-server call to Cloudflare to verify the token is legitimate
     const turnstileVerify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -29,14 +28,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Security check failed. We suspect bot activity." }, { status: 403 });
     }
 
-    // 3. Check if the Campaign is still active
+    // 3. Fetch Campaign & ✨ STRICT TIMELINE VERIFICATION ✨
     const campaign = await votingPrisma.campaign.findUnique({
       where: { id: campaignId },
-      select: { is_active: true }
+      // Fetch the timeline dates we added to the schema
+      select: { is_active: true, start_date: true, end_date: true } 
     });
 
     if (!campaign || !campaign.is_active) {
-      return NextResponse.json({ error: "This voting campaign is closed." }, { status: 400 });
+      return NextResponse.json({ error: "This voting campaign is disabled." }, { status: 400 });
+    }
+
+    const now = new Date();
+    
+    // Check if voting hasn't started yet
+    if (campaign.start_date && now < campaign.start_date) {
+      return NextResponse.json({ error: "Voting for this campaign has not officially opened yet." }, { status: 403 });
+    }
+
+    // Check if voting has already closed
+    if (campaign.end_date && now > campaign.end_date) {
+      return NextResponse.json({ error: "Voting for this campaign has officially closed." }, { status: 403 });
     }
 
     // 4. Pre-check for duplicate votes (The "One Vote Per Person" rule)
@@ -60,7 +72,6 @@ export async function POST(req: Request) {
     }
 
     // 5. Execute the Secure Transaction
-    // This ensures the vote is created AND the total is incremented simultaneously
     await votingPrisma.$transaction([
       votingPrisma.vote.create({
         data: {

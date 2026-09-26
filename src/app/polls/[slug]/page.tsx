@@ -2,13 +2,13 @@ import { notFound } from "next/navigation";
 import { PrismaClient as VotingPrismaClient } from "../../../generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import Link from "next/link";
-import { ArrowLeft, Users, Activity, Crown } from "lucide-react";
+import { ArrowLeft, Users, Activity, Crown, Clock } from "lucide-react";
 import VotingCard from "./VotingCard";
 
 const adapter = new PrismaNeon({ connectionString: process.env.VOTING_DATABASE_URL! });
 const votingPrisma = new VotingPrismaClient({ adapter });
 
-export const revalidate = 60; // Cache for 60 seconds
+export const revalidate = 60; 
 
 export default async function PublicPollPage({
   params,
@@ -22,7 +22,7 @@ export default async function PublicPollPage({
     where: { slug: slug },
     include: {
       candidates: {
-        orderBy: { name: "asc" }, // Alphabetical for fairness during voting
+        orderBy: { name: "asc" },
         select: { id: true, name: true, image_url: true, total_votes: true },
       },
     },
@@ -32,26 +32,29 @@ export default async function PublicPollPage({
     notFound();
   }
 
-  // Pre-calculate the total votes across the whole campaign
+  // ✨ TIMELINE LOGIC
+  const now = new Date();
+  const startDate = campaign.start_date ? new Date(campaign.start_date) : new Date(0);
+  const endDate = campaign.end_date ? new Date(campaign.end_date) : new Date(9999999999999);
+  
+  const isUpcoming = now < startDate;
+  const isClosed = now > endDate;
+
   const totalCampaignVotes = campaign.candidates.reduce(
     (sum, cand) => sum + (cand.total_votes || 0),
     0
   );
 
-  // Find the highest vote count to determine the current leader
   const highestVotes = Math.max(...campaign.candidates.map(c => c.total_votes || 0));
-  
-  // Identify the leading candidate(s) safely
   const leader = campaign.candidates.find(c => c.total_votes === highestVotes);
   
-  // Calculate the leader's percentage of the total votes
   const leaderPercentage = totalCampaignVotes > 0 
     ? Math.round((highestVotes / totalCampaignVotes) * 100) 
     : 0;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-orange-500/30 selection:text-orange-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Effects */}
+      
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[20%] w-[40%] h-[40%] rounded-full bg-orange-600/10 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-blue-500/5 blur-[100px]" />
@@ -59,7 +62,6 @@ export default async function PublicPollPage({
 
       <div className="max-w-6xl mx-auto relative z-10 animate-fade-in-up">
         
-        {/* Navigation */}
         <Link
           href="/polls"
           className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 hover:border-orange-500/50 transition-all text-xs font-bold text-slate-400 mb-8"
@@ -77,9 +79,30 @@ export default async function PublicPollPage({
             </h1>
           </div>
           
-          <p className="text-slate-400 text-lg sm:text-xl font-medium mb-8">
-            Select your favorite nominee below and cast your vote securely.
-          </p>
+          {/* ✨ DYNAMIC STATUS SUBTITLE */}
+          {isClosed ? (
+            <div className="inline-flex flex-col items-center justify-center gap-2 mb-8">
+              <span className="px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-bold uppercase tracking-widest border border-red-500/20 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5" /> Voting Closed
+              </span>
+              <p className="text-slate-300 text-lg sm:text-xl font-medium">
+                The campaign has officially concluded. Here are the final results!
+              </p>
+            </div>
+          ) : isUpcoming ? (
+            <div className="inline-flex flex-col items-center justify-center gap-2 mb-8">
+              <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold uppercase tracking-widest border border-orange-500/20 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 animate-pulse" /> Opens Soon
+              </span>
+              <p className="text-slate-400 text-lg sm:text-xl font-medium">
+                Voting officially opens on {startDate.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}. Check back soon!
+              </p>
+            </div>
+          ) : (
+            <p className="text-slate-400 text-lg sm:text-xl font-medium mb-8">
+              Select your favorite nominee below and cast your vote securely.
+            </p>
+          )}
 
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner">
@@ -103,12 +126,14 @@ export default async function PublicPollPage({
             </div>
 
             {totalCampaignVotes > 0 && leader && (
-              <div className="flex items-center gap-3 bg-slate-900/60 border border-slate-800/80 px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner">
+              <div className={`flex items-center gap-3 bg-slate-900/60 border ${isClosed ? 'border-yellow-500/30' : 'border-slate-800/80'} px-5 py-3 rounded-2xl backdrop-blur-md shadow-inner transition-colors`}>
                 <div className="p-2 bg-yellow-500/10 rounded-lg">
                   <Crown className="w-5 h-5 text-yellow-500" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none mb-1">Current Leader</span>
+                  <span className={`text-[10px] font-mono uppercase tracking-widest leading-none mb-1 ${isClosed ? 'text-yellow-500/80 font-bold' : 'text-slate-500'}`}>
+                    {isClosed ? 'Winner' : 'Current Leader'}
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-black text-slate-200 leading-none truncate max-w-30">
                       {leader.name.split(" ")[0]}
@@ -122,13 +147,12 @@ export default async function PublicPollPage({
             )}
           </div>
         </div>
-        {/* --------------------------------------- */}
 
         {/* Voting Grid */}
         <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
           {campaign.candidates.map((candidate) => {
             const candidateVotes = candidate.total_votes || 0;
-            const isLeader = candidateVotes > 0 && candidateVotes === highestVotes;
+            const isLeaderStatus = candidateVotes > 0 && candidateVotes === highestVotes;
 
             return (
               <VotingCard
@@ -139,7 +163,9 @@ export default async function PublicPollPage({
                 imageUrl={candidate.image_url}
                 candidateVotes={candidateVotes}
                 totalCampaignVotes={totalCampaignVotes}
-                isLeader={isLeader}
+                isLeader={isLeaderStatus}
+                isClosed={isClosed}     // ✨ NEW
+                isUpcoming={isUpcoming} // ✨ NEW
               />
             );
           })}

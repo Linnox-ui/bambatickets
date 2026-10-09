@@ -4,14 +4,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "dev": "next dev",
-  "build": "prisma generate && next build",
-  "start": "next start",
-  "lint": "eslint",
-  "postinstall": "prisma generate",
-  "contract:emit": "prisma contract emit",
-  "db:reset": "tsx scripts/reset-prod.ts"
-},
+    "dev": "next dev",
+    "generate": "prisma generate && cross-env PRISMA_TARGET=voting prisma generate",
+    "build": "npm run generate && next build",
+    "start": "next start",
+    "lint": "eslint",
+    "postinstall": "npm run generate",
+    "contract:emit": "prisma contract emit",
+    "db:reset": "tsx scripts/reset-prod.ts"
+  },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
     "@fingerprintjs/fingerprintjs": "^5.2.0",
@@ -53,6 +54,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",

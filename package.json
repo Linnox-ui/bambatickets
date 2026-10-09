@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && prisma generate --schema=voting-db/voting.schema.prisma && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",

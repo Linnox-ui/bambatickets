@@ -1,7 +1,7 @@
 "use server";
 
-import prisma from "../lib/prisma";
-import { auth } from "../auth";
+import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
 import { FeeBearer } from "@prisma/client";

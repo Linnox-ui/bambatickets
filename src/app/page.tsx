@@ -1,7 +1,7 @@
-import prisma from "../lib/prisma";
-import EventBrowser from "../components/EventBrowser";
+import prisma from "@/lib/prisma";
+import EventBrowser from "@/components/EventBrowser";
 import Link from "next/link";
-import { auth } from "../auth";
+import { auth } from "@/auth";
 
 export default async function PublicHomePage() {
   const session = await auth();

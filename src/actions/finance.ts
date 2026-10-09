@@ -1,7 +1,7 @@
 "use server";
 
-import prisma from "../lib/prisma";
-import { auth } from "../auth";
+import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
 // UPDATE ORGANIZER PAYOUT DETAILS

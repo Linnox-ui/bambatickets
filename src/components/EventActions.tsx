@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { deleteEvent } from "../actions/events";
+import { deleteEvent } from "@/actions/events";
 import { toast } from "sonner";
 import { Trash2, Loader2, Settings } from "lucide-react";
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Ticket, User, Mail, Loader2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { initializeCheckout } from "../actions/checkout";
+import { initializeCheckout } from "@/actions/checkout";
 
 interface TicketTier {
   id: string;

@@ -1,10 +1,10 @@
 "use server";
 
-import prisma from "../lib/prisma";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-import { sendVerificationEmail } from "../lib/mail";
+import { sendVerificationEmail } from "@/lib/mail";
 
 export async function registerUser(formData: FormData) {
   const firstName = formData.get("firstName") as string;

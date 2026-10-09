@@ -15,7 +15,7 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
-import { updateEvent, deleteEvent } from "../actions/events";
+import { updateEvent, deleteEvent } from "@/actions/events";
 
 interface EditEventFormProps {
   event: {

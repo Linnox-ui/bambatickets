@@ -5,10 +5,10 @@
   "private": true,
   "scripts": {
   "dev": "next dev",
-  "build": "next build",
+  "build": "prisma generate && next build",
   "start": "next start",
   "lint": "eslint",
-  "postinstall": "echo 'Skipping prisma generate on vercel build'",
+  "postinstall": "prisma generate",
   "contract:emit": "prisma contract emit",
   "db:reset": "tsx scripts/reset-prod.ts"
 },

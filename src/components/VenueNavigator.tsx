@@ -96,7 +96,7 @@ export default function VenueNavigator({
   // Modal content structure
   const modalContent = isOpen && (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200"
       onClick={() => setIsOpen(false)}
     >
       <div 
@@ -113,7 +113,7 @@ export default function VenueNavigator({
               <h3 className="text-base font-bold text-white leading-tight">
                 Navigate to Venue
               </h3>
-              <p className="text-[11px] text-slate-400 truncate max-w-[220px]">
+              <p className="text-[11px] text-slate-400 truncate max-w-55">
                 {locationName}
               </p>
             </div>

@@ -2,293 +2,346 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import Navbar from "./Navbar";
+import Header from "./Header";
+import VenueNavigator from "@/components/VenueNavigator";
 import {
   Calendar,
   MapPin,
   Ticket,
   ArrowRight,
   Clock,
+  Search,
   X,
-  Radar,
 } from "lucide-react";
 
-type Event = {
+export type EventItem = {
   id: string;
   title: string;
   date: Date | string;
   location: string;
   imageUrl: string | null;
   isPublished: boolean;
+  category?: string;
+  venueAddress?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   ticketTiers: {
     price: number;
     capacity: number;
     _count?: { tickets: number };
   }[];
-  organizer: { firstName: string; lastName: string };
+  organizer?: { firstName: string; lastName: string };
 };
 
 export default function EventBrowser({
   initialEvents,
 }: {
-  initialEvents: Event[];
+  initialEvents: EventItem[];
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("All Kenya");
+  const [dateFilter, setDateFilter] = useState("All Dates");
+  const [activeCategory, setActiveCategory] = useState("All Events");
 
+  // Multi-variable filtering matching the Header search bar
   const filteredEvents = useMemo(() => {
-    if (!searchQuery) return initialEvents;
-    const lowerQuery = searchQuery.toLowerCase();
-    return initialEvents.filter(
-      (event) =>
+    return initialEvents.filter((event) => {
+      const lowerQuery = searchQuery.toLowerCase().trim();
+      const eventDate = new Date(event.date);
+      const now = new Date();
+
+      // 1. Text search (Artist / Title / Venue / Organizer)
+      const matchesSearch =
+        !lowerQuery ||
         event.title.toLowerCase().includes(lowerQuery) ||
         event.location.toLowerCase().includes(lowerQuery) ||
-        event.organizer.firstName.toLowerCase().includes(lowerQuery),
-    );
-  }, [searchQuery, initialEvents]);
+        Boolean(event.organizer?.firstName?.toLowerCase().includes(lowerQuery)) ||
+        Boolean(event.organizer?.lastName?.toLowerCase().includes(lowerQuery));
+
+      // 2. Location filter
+      const matchesLocation =
+        location === "All Kenya" ||
+        event.location.toLowerCase().includes(location.toLowerCase());
+
+      // 3. Category filter
+      const matchesCategory =
+        activeCategory === "All Events" ||
+        (event.category &&
+          event.category.toLowerCase() === activeCategory.toLowerCase());
+
+      // 4. Date filter (accruing Friday through Sunday correctly)
+      let matchesDate = true;
+      if (dateFilter === "Today") {
+        matchesDate =
+          eventDate.getDate() === now.getDate() &&
+          eventDate.getMonth() === now.getMonth() &&
+          eventDate.getFullYear() === now.getFullYear();
+      } else if (dateFilter === "This Weekend") {
+        const dayOfWeek = now.getDay(); // 0 = Sun, 5 = Fri, 6 = Sat
+        const weekendStart = new Date(now);
+        const weekendEnd = new Date(now);
+
+        if (dayOfWeek === 0) {
+          // Sunday: include from Friday (2 days ago) to end of today
+          weekendStart.setDate(now.getDate() - 2);
+          weekendEnd.setDate(now.getDate());
+        } else if (dayOfWeek === 6) {
+          // Saturday: include from Friday (1 day ago) to end of tomorrow (Sunday)
+          weekendStart.setDate(now.getDate() - 1);
+          weekendEnd.setDate(now.getDate() + 1);
+        } else {
+          // Mon-Fri: find coming Friday through Sunday
+          const daysToFriday = 5 - dayOfWeek;
+          weekendStart.setDate(now.getDate() + daysToFriday);
+          weekendEnd.setDate(now.getDate() + daysToFriday + 2);
+        }
+
+        weekendStart.setHours(0, 0, 0, 0);
+        weekendEnd.setHours(23, 59, 59, 999);
+
+        matchesDate = eventDate >= weekendStart && eventDate <= weekendEnd;
+      } else if (dateFilter === "This Month") {
+        matchesDate =
+          eventDate.getMonth() === now.getMonth() &&
+          eventDate.getFullYear() === now.getFullYear();
+      } else if (dateFilter === "Upcoming") {
+        matchesDate = eventDate.getTime() >= now.getTime();
+      }
+
+      return matchesSearch && matchesLocation && matchesCategory && matchesDate;
+    });
+  }, [searchQuery, location, dateFilter, activeCategory, initialEvents]);
+
+  const resetAllFilters = () => {
+    setSearchQuery("");
+    setLocation("All Kenya");
+    setDateFilter("All Dates");
+    setActiveCategory("All Events");
+  };
+
+  const hasActiveFilters =
+    searchQuery !== "" ||
+    location !== "All Kenya" ||
+    dateFilter !== "All Dates" ||
+    activeCategory !== "All Events";
 
   return (
-    <>
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-orange-500/30 selection:text-orange-50">
+      
+      {/* Header with Search & Live Discovery Dialog */}
+      <Header
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        location={location}
+        setLocation={setLocation}
+        dateFilter={dateFilter}
+        setDateFilter={setDateFilter}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        events={initialEvents}
+      />
 
-      {!searchQuery && (
-        <section className="relative py-8 sm:py-12 flex justify-center items-center animate-fade-in-up">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 pointer-events-none" />
-
-          <div className="relative z-10 group cursor-default flex flex-col items-center gap-4 sm:gap-5 w-full">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center transition-all duration-700 ease-out group-hover:scale-110">
-              <div
-                className="absolute inset-0 rounded-full border-[3px] border-orange-500/60 opacity-0 group-hover:animate-shockwave"
-                style={{ animationDelay: "0s" }}
-              />
-              <div
-                className="absolute inset-0 rounded-full border-[3px] border-orange-500/40 opacity-0 group-hover:animate-shockwave"
-                style={{ animationDelay: "0.6s" }}
-              />
-
-              <div className="relative w-full h-full animate-float drop-shadow-[0_0_15px_rgba(249,115,22,0.4)] group-hover:drop-shadow-[0_0_40px_rgba(249,115,22,0.9)] transition-all duration-500">
-                <img
-                  src="/logo.svg"
-                  alt="Bamba Tickets"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center relative h-12 sm:h-16 justify-start">
-              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tighter transition-all duration-700 ease-out group-hover:tracking-widest sm:group-hover:tracking-[0.15em] flex items-center">
-                BAMBA<span className="animate-shine ml-1 sm:ml-2">TICKETS</span>
-              </h1>
-
-              <div className="absolute top-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="text-orange-500 text-[9px] sm:text-[10px] font-mono font-bold tracking-widest hidden group-hover:block animate-typing">
-                  SYSTEM ONLINE. READY FOR EVENTS.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      <main
-        className={`max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pb-16 sm:pb-24 relative z-10 min-h-[50vh] transition-all duration-500 ${searchQuery ? "pt-8 sm:pt-12" : "pt-4"}`}
-      >
-        <div className="flex items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-900 mb-8 sm:mb-12">
-          <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2 sm:gap-3">
-            <Ticket className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500" />
-            {searchQuery ? "Search Results" : "Upcoming Events"}
-            <span
-              className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full border text-xs sm:text-sm font-mono transition-colors duration-300 ${filteredEvents.length === 0 ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-slate-950 border-slate-800 text-orange-500"}`}
-            >
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 lg:px-12 py-10">
+        
+        {/* Results Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-900 mb-8">
+          <div className="flex items-center gap-3">
+            <Ticket className="w-6 h-6 text-orange-500 shrink-0" />
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              {activeCategory === "All Events" ? "Upcoming Events in Kenya" : activeCategory}
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-orange-400">
               {filteredEvents.length}
             </span>
-          </h2>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetAllFilters}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-orange-400 transition-colors self-start sm:self-auto cursor-pointer"
+            >
+              Reset All Filters <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
+        {/* Empty State */}
         {filteredEvents.length === 0 ? (
-          <div className="text-center py-24 sm:py-32 space-y-6 bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-4xl sm:rounded-[3rem] shadow-2xl relative overflow-hidden animate-fade-in-up">
-            <style
-              dangerouslySetInnerHTML={{
-                __html: `
-              @keyframes scan {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-              .radar-scanner {
-                background: conic-gradient(from 0deg, transparent 70%, rgba(249,115,22,0.4) 100%);
-                animation: scan 2s linear infinite;
-              }
-            `,
-              }}
-            />
-
-            <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto rounded-full border border-slate-700/50 flex items-center justify-center bg-slate-950 shadow-inner overflow-hidden">
-              <div className="absolute inset-0 radar-scanner origin-center" />
-              <div className="absolute inset-0 rounded-full border-2 border-dashed border-slate-700/50 animate-[spin_10s_linear_infinite_reverse]" />
-              <Radar className="w-10 h-10 sm:w-12 sm:h-12 text-orange-500/50 relative z-10 animate-pulse" />
+          <div className="text-center py-24 px-4 bg-slate-900/40 border border-slate-800/80 rounded-3xl max-w-xl mx-auto space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto text-slate-500">
+              <Search className="w-6 h-6" />
             </div>
-
-            <div className="relative z-10 px-4 space-y-2">
-              <h3 className="text-white font-black text-xl sm:text-2xl tracking-tight">
-                Target Lost.
-              </h3>
-              <p className="text-slate-400 font-mono text-sm max-w-sm mx-auto uppercase tracking-widest">
-                No telemetry found for{" "}
-                <span className="text-orange-500 border-b border-orange-500/50">
-                  "{searchQuery}"
-                </span>
-              </p>
-              <button
-                onClick={() => setSearchQuery("")}
-                className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-slate-800 hover:bg-orange-500 text-slate-300 hover:text-slate-950 font-bold rounded-full text-xs transition-all duration-300"
-              >
-                Clear Search <X className="w-3 h-3" />
-              </button>
-            </div>
+            <h2 className="text-white font-bold text-lg">No events found</h2>
+            <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto">
+              We couldn&apos;t find any events matching your selected criteria. Try adjusting your location, dates, or search term.
+            </p>
+            <button
+              onClick={resetAllFilters}
+              className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-orange-500/20 cursor-pointer"
+            >
+              View All Events
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
-            {filteredEvents.map((event, index) => {
+          /* Event Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {filteredEvents.map((event) => {
               const lowestPrice =
                 event.ticketTiers.length > 0
                   ? Math.min(...event.ticketTiers.map((t) => t.price))
                   : 0;
 
-              const totalCapacity = event.ticketTiers.reduce(
-                (acc, tier) => acc + tier.capacity,
-                0,
-              );
-              const totalSold = event.ticketTiers.reduce(
-                (acc, tier) => acc + (tier._count?.tickets || 0),
-                0,
-              );
+              const totalCapacity = event.ticketTiers.reduce((acc, t) => acc + t.capacity, 0);
+              const totalSold = event.ticketTiers.reduce((acc, t) => acc + (t._count?.tickets || 0), 0);
               const isSoldOut = totalCapacity > 0 && totalSold >= totalCapacity;
-              const isPast =
-                new Date(event.date).getTime() < new Date().getTime();
+              const isPast = new Date(event.date).getTime() < new Date().getTime();
 
-              const cardClasses = `animate-fade-in-up group relative bg-slate-900 border border-slate-800 rounded-3xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl transition-all duration-500 flex flex-col justify-between ${
+              const cardClasses = `group relative bg-slate-900/60 border border-slate-800/90 rounded-3xl overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                 isPast
-                  ? "opacity-60 grayscale cursor-not-allowed"
-                  : "hover:border-orange-500/50 hover:-translate-y-2 cursor-pointer"
+                  ? "opacity-60 grayscale"
+                  : "hover:border-orange-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/5"
               }`;
-              const cardStyle = { animationDelay: `${(index % 10) * 50}ms` };
-
-              const cardContent = (
-                <>
-                  <div>
-                    <div className="relative aspect-4/3 bg-slate-950 overflow-hidden">
-                      {event.imageUrl ? (
-                        <img
-                          src={event.imageUrl}
-                          alt={event.title}
-                          className={`w-full h-full object-cover transition-transform duration-700 ${!isPast && "group-hover:scale-110"}`}
-                        />
-                      ) : (
-                        <div
-                          className={`w-full h-full bg-linear-to-br from-slate-900 to-slate-950 flex flex-col items-center justify-center transition-transform duration-500 relative ${!isPast && "group-hover:scale-105"}`}
-                        >
-                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.4)_0,transparent_70%)]" />
-                          <Ticket
-                            className={`w-12 h-12 text-slate-700 relative z-10 transition-colors ${!isPast && "group-hover:text-orange-500/50"}`}
-                          />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/20 to-transparent opacity-90" />
-
-                      <div className="absolute top-4 sm:top-5 right-4 sm:right-5 flex flex-col gap-2 items-end">
-                        <div className="bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-[10px] sm:text-xs font-mono font-bold shadow-xl">
-                          KES{" "}
-                          <span className="text-orange-500">
-                            {lowestPrice.toLocaleString()}
-                          </span>
-                        </div>
-
-                        {isPast ? (
-                          <div className="bg-slate-800/90 text-slate-300 border border-slate-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
-                            Ended
-                          </div>
-                        ) : isSoldOut ? (
-                          <div className="bg-red-500/90 text-white border border-red-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse">
-                            Sold Out
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="p-6 sm:p-8 space-y-3 sm:space-y-4 relative -mt-5 sm:-mt-6">
-                      <div className="flex flex-wrap items-center gap-3 text-[10px] sm:text-[11px] font-mono uppercase tracking-widest font-black">
-                        <div className="flex items-center gap-1.5 text-orange-500 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20 shadow-inner">
-                          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                          {new Date(event.date).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "2-digit",
-                          })}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-slate-300 bg-slate-800/80 px-2 py-1 rounded-md border border-slate-700/50 shadow-inner">
-                          <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400" />
-                          {new Date(event.date).toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </div>
-                      </div>
-                      <h3
-                        className={`text-xl sm:text-2xl font-black text-white transition-colors line-clamp-2 leading-tight ${!isPast && "group-hover:text-orange-400"}`}
-                      >
-                        {event.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-400 font-medium">
-                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 shrink-0" />
-                        <span className="truncate">{event.location}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="px-6 sm:px-8 pb-6 sm:pb-8 flex items-center justify-between">
-                    <span className="text-[10px] sm:text-xs font-mono text-slate-500 flex items-center gap-2">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-800 flex items-center justify-center text-[9px] sm:text-[10px] text-white font-black border border-slate-700 shadow-inner">
-                        {event.organizer.firstName.charAt(0)}
-                      </div>
-                      {event.organizer.firstName}
-                    </span>
-                    <span
-                      className={`px-4 py-2 sm:px-5 sm:py-2.5 font-black rounded-full sm:rounded-xl text-[10px] sm:text-xs transition-all flex items-center gap-2 shadow-lg ${isPast ? "bg-slate-800 text-slate-500 border border-slate-700" : "bg-slate-800 group-hover:bg-orange-500 border border-slate-700 text-slate-300 group-hover:text-slate-950"}`}
-                    >
-                      {isPast
-                        ? "Unavailable"
-                        : isSoldOut
-                          ? "Sold Out"
-                          : "Tickets"}
-                      {!isPast && !isSoldOut && (
-                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1.5 transition-transform" />
-                      )}
-                    </span>
-                  </div>
-                </>
-              );
-
-              if (isPast) {
-                return (
-                  <div key={event.id} className={cardClasses} style={cardStyle}>
-                    {cardContent}
-                  </div>
-                );
-              }
 
               return (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className={cardClasses}
-                  style={cardStyle}
-                >
-                  {cardContent}
-                </Link>
+                <div key={event.id} className={cardClasses}>
+                  {/* Clickable Card Body Content */}
+                  {isPast ? (
+                    <div className="block flex-1 cursor-not-allowed">
+                      <EventCardContent event={event} lowestPrice={lowestPrice} isPast={isPast} isSoldOut={isSoldOut} />
+                    </div>
+                  ) : (
+                    <Link href={`/events/${event.id}`} className="block flex-1">
+                      <EventCardContent event={event} lowestPrice={lowestPrice} isPast={isPast} isSoldOut={isSoldOut} />
+                    </Link>
+                  )}
+
+                  {/* Card Bottom Meta: Location Pin acts as the directions button, Get Tickets prioritized */}
+                  <div className="px-6 pb-6 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
+                    
+                    {/* Location Pin Trigger for Navigator Modal */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <VenueNavigator 
+                        locationName={event.location}
+                        venueAddress={event.venueAddress}
+                        latitude={event.latitude}
+                        longitude={event.longitude}
+                        renderAsIconOnly={true}
+                      />
+                    </div>
+
+                    {isPast ? (
+                      <span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider">
+                        Event Ended
+                      </span>
+                    ) : isSoldOut ? (
+                      <span className="font-bold text-red-400 uppercase text-[10px] tracking-wider">
+                        Sold Out
+                      </span>
+                    ) : (
+                      <Link 
+                        href={`/events/${event.id}`}
+                        className="font-bold text-white group-hover:text-orange-400 inline-flex items-center gap-1 transition-colors"
+                      >
+                        <span>Get Tickets</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-orange-500 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
       </main>
-    </>
+
+      {/* Global Landing Footer */}
+      <footer className="border-t border-slate-900 py-8 bg-slate-950 text-slate-500 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="font-mono text-[11px]">
+            &copy; {new Date().getFullYear()} Bamba Tickets. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6 font-semibold">
+            <Link href="/become-organizer" className="hover:text-orange-400 transition-colors">
+              Host an Event
+            </Link>
+            <Link href="/polls" className="hover:text-orange-400 transition-colors">
+              Voting Center
+            </Link>
+            <Link href="/terms" className="hover:text-orange-400 transition-colors">
+              Terms & Conditions
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function EventCardContent({ event, lowestPrice, isPast, isSoldOut }: { event: EventItem; lowestPrice: number; isPast: boolean; isSoldOut: boolean }) {
+  return (
+    <div>
+      <div className="relative aspect-video bg-slate-950 overflow-hidden">
+        {event.imageUrl ? (
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            className={`w-full h-full object-cover transition-transform duration-500 ${!isPast && "group-hover:scale-105"}`}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+            <Ticket className="w-10 h-10 text-slate-700" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent" />
+
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3 py-1 rounded-full text-white text-xs font-mono font-bold shadow-md">
+            {lowestPrice === 0 ? "FREE" : `KES ${lowestPrice.toLocaleString()}`}
+          </div>
+
+          {isPast ? (
+            <span className="bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-700">
+              Ended
+            </span>
+          ) : isSoldOut ? (
+            <span className="bg-red-500 text-white px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-md">
+              Sold Out
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="p-6 space-y-3">
+        <div className="flex items-center gap-3 text-xs font-mono text-orange-400 font-bold">
+          <span className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5" />
+            {new Date(event.date).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+          <span className="text-slate-600">•</span>
+          <span className="flex items-center gap-1 text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            {new Date(event.date).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+
+        <h2 className={`text-lg font-bold text-white transition-colors line-clamp-1 ${!isPast && "group-hover:text-orange-400"}`}>
+          {event.title}
+        </h2>
+
+        <p className="flex items-center gap-1.5 text-xs text-slate-400 line-clamp-1">
+          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+          {event.location}
+        </p>
+      </div>
+    </div>
   );
 }

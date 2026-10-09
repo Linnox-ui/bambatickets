@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
-  MapPin,
   Image as ImageIcon,
   Plus,
   Trash2,
@@ -14,9 +13,21 @@ import {
   AlignLeft,
   Wallet,
   Ticket,
+  ChevronDown,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createEvent } from "@/actions/events";
+import LocationPickerMap from "@/components/LocationPickerMap"; // 👈 Imported
+
+const EVENT_CATEGORIES = [
+  "Concerts",
+  "Festivals",
+  "Nightlife",
+  "Campus",
+  "Sports",
+  "Voting & Polls",
+];
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -24,11 +35,17 @@ export default function CreateEventPage() {
 
   // Basic Details
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("Concerts");
   const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // Map Location Details
+  const [locationName, setLocationName] = useState("");
+  const [venueAddress, setVenueAddress] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   // Fee Logic
   const [feeBearer, setFeeBearer] = useState<"ATTENDEE" | "ORGANIZER">(
@@ -62,7 +79,7 @@ export default function CreateEventPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!title || !location || !date || !time) {
+    if (!title || !category || !locationName || !date || !time) {
       toast.error("Please fill in all basic event details.");
       setIsSubmitting(false);
       return;
@@ -87,12 +104,18 @@ export default function CreateEventPage() {
 
     const formData = new FormData();
     formData.append("title", title);
+    formData.append("category", category);
     formData.append("description", description);
-    formData.append("location", location);
     formData.append("date", date);
     formData.append("time", time);
     formData.append("feeBearer", feeBearer);
     formData.append("tiers", JSON.stringify(tiers));
+    
+    // Append the map fields
+    formData.append("location", locationName);
+    if (venueAddress) formData.append("venueAddress", venueAddress);
+    if (latitude !== null) formData.append("latitude", latitude.toString());
+    if (longitude !== null) formData.append("longitude", longitude.toString());
 
     if (imageFile) {
       formData.append("imageFile", imageFile);
@@ -107,7 +130,7 @@ export default function CreateEventPage() {
       setIsSubmitting(false);
     } else {
       toast.success(result.success || "Event published!");
-      router.push("/studio"); // Redirects back to overview to see the new event
+      router.push("/studio");
       router.refresh();
     }
   }
@@ -129,7 +152,7 @@ export default function CreateEventPage() {
           Create New Event
         </h1>
         <p className="text-slate-400 mt-1.5 text-sm sm:text-base">
-          Set up your event details and configure ticket pricing.
+          Set up your event details, select category, and configure ticket pricing.
         </p>
       </div>
 
@@ -139,40 +162,65 @@ export default function CreateEventPage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-[80px] pointer-events-none" />
 
           <h2 className="text-lg font-black text-white flex items-center gap-2 border-b border-slate-800 pb-4">
-            <CalendarDays className="w-5 h-5 text-orange-500" /> Essential
-            Details
+            <CalendarDays className="w-5 h-5 text-orange-500" /> Essential Details
           </h2>
 
           <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
-                Event Title
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isSubmitting}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-white text-lg font-bold rounded-xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all shadow-inner placeholder-slate-600 disabled:opacity-50"
-                placeholder="e.g. Blankets & Wine Nairobi"
-              />
+            {/* Title & Category Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
+                  Event Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={isSubmitting}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 text-white text-lg font-bold rounded-xl px-5 py-4 focus:outline-none focus:border-orange-500 transition-all shadow-inner placeholder-slate-600 disabled:opacity-50"
+                  placeholder="e.g. Blankets & Wine Nairobi"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
+                  Event Category
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <select
+                    disabled={isSubmitting}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm font-semibold rounded-xl pl-11 pr-10 py-4 focus:outline-none focus:border-orange-500 transition-all shadow-inner appearance-none cursor-pointer disabled:opacity-50"
+                  >
+                    {EVENT_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat} className="bg-slate-900 text-white">
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                </div>
+              </div>
             </div>
 
+            {/* Date & Time Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                   Date
                 </label>
                 <div className="relative">
-                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="date"
                     required
                     disabled={isSubmitting}
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -181,56 +229,55 @@ export default function CreateEventPage() {
                   Time
                 </label>
                 <div className="relative">
-                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <CalendarDays className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="time"
                     required
                     disabled={isSubmitting}
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
+                    className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner scheme-dark disabled:opacity-50"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
-                Location
-              </label>
-              <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="text"
-                  required
-                  disabled={isSubmitting}
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner placeholder-slate-600 disabled:opacity-50"
-                  placeholder="e.g. Carnivore Grounds, Langata"
-                />
-              </div>
-            </div>
-
+            {/* Description */}
             <div className="space-y-2">
               <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 Description
               </label>
               <div className="relative">
-                <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-slate-500" />
+                <AlignLeft className="absolute left-4 top-4 w-4 h-4 text-slate-500" />
                 <textarea
                   required
                   disabled={isSubmitting}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner placeholder-slate-600 resize-none disabled:opacity-50"
+                  className="w-full bg-slate-950 border border-slate-800 text-white text-sm rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:border-orange-500 transition-all shadow-inner placeholder-slate-600 resize-none disabled:opacity-50"
                   placeholder="Tell attendees what to expect..."
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* 🚀 THE NEW MAP LOCATION PICKER */}
+            <div className="pt-4 border-t border-slate-800">
+              <h3 className="text-sm font-bold text-white mb-4">Event Location</h3>
+              <LocationPickerMap 
+                locationName={locationName}
+                setLocationName={setLocationName}
+                venueAddress={venueAddress}
+                setVenueAddress={setVenueAddress}
+                latitude={latitude}
+                setLatitude={setLatitude}
+                longitude={longitude}
+                setLongitude={setLongitude}
+              />
+            </div>
+
+            {/* Banner Image */}
+            <div className="space-y-2 pt-4 border-t border-slate-800">
               <label className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                 Event Banner Image (Max 10MB)
               </label>
@@ -260,7 +307,7 @@ export default function CreateEventPage() {
               type="button"
               disabled={isSubmitting}
               onClick={addTier}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
+              className="text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Add Tier
             </button>
@@ -334,7 +381,7 @@ export default function CreateEventPage() {
                     type="button"
                     disabled={isSubmitting}
                     onClick={() => removeTier(index)}
-                    className="absolute -top-3 -right-3 sm:static sm:mt-6 p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                    className="absolute -top-3 -right-3 sm:static sm:mt-6 p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -351,7 +398,7 @@ export default function CreateEventPage() {
               <button
                 type="button"
                 onClick={() => setFeeBearer("ATTENDEE")}
-                className={`p-4 rounded-xl border text-left transition-all ${
+                className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   feeBearer === "ATTENDEE"
                     ? "bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.1)]"
                     : "bg-slate-950 border-slate-800 hover:border-slate-700"
@@ -370,7 +417,7 @@ export default function CreateEventPage() {
               <button
                 type="button"
                 onClick={() => setFeeBearer("ORGANIZER")}
-                className={`p-4 rounded-xl border text-left transition-all ${
+                className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                   feeBearer === "ORGANIZER"
                     ? "bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
                     : "bg-slate-950 border-slate-800 hover:border-slate-700"
@@ -394,7 +441,7 @@ export default function CreateEventPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-10 py-4 bg-linear-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] active:scale-95 disabled:opacity-50 text-xs tracking-wider uppercase flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-10 py-4 bg-linear-to-r from-orange-500 to-amber-400 hover:from-orange-400 hover:to-amber-300 text-slate-950 font-black rounded-xl transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)] active:scale-95 disabled:opacity-50 text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? (
               <>

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import TicketSelector from "./_components/TicketSelector";
+import EventVenueMap from "@/components/EventVenueMap"; // 👈 Added Import
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -49,6 +50,8 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-orange-500/30 selection:text-orange-50 pb-24">
+      
+      {/* HERO BANNER */}
       <div className="relative w-full h-[40vh] sm:h-[50vh] min-h-87.5 bg-slate-900 overflow-hidden animate-fade-in-up">
         <style
           dangerouslySetInnerHTML={{
@@ -83,6 +86,8 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 sm:-mt-32 relative z-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          
+          {/* LEFT COLUMN: Event Details & Map */}
           <div
             className="lg:col-span-7 space-y-6 sm:space-y-8 animate-fade-in-up"
             style={{ animationDelay: "0.1s" }}
@@ -144,18 +149,6 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 p-5 sm:p-6 rounded-3xl flex items-start gap-4 shadow-xl">
-              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0 mt-1 border border-orange-500/20 shadow-inner">
-                <MapPin className="w-6 h-6 text-orange-500" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold mb-1.5">Location</h3>
-                <p className="text-slate-400 text-sm leading-relaxed wrap-break-word">
-                  {event.location}
-                </p>
-              </div>
-            </div>
-
             <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
               <h2 className="text-xl font-black text-white flex items-center gap-2 border-b border-slate-800 pb-4">
                 <Info className="w-5 h-5 text-slate-500" /> About This Event
@@ -173,8 +166,18 @@ export default async function PublicEventDetailPage({ params }: PageProps) {
                 </span>
               </div>
             </div>
+
+            {/* 🚀 THE INTERACTIVE VENUE MAP */}
+            <EventVenueMap 
+              locationName={event.location}
+              venueAddress={event.venueAddress}
+              latitude={event.latitude}
+              longitude={event.longitude}
+            />
+
           </div>
 
+          {/* RIGHT COLUMN: Ticket Checkout Box */}
           <div
             className="lg:col-span-5 animate-fade-in-up"
             style={{ animationDelay: "0.2s" }}

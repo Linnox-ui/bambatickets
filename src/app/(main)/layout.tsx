@@ -1,37 +1,19 @@
-import type { Viewport } from "next";
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import StudioShell from "@/components/StudioShell";
+import type { Metadata } from "next";
 
-// 1. Add this Viewport export to stop mobile browsers from "zooming out"
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // Prevents accidental zooming on mobile
+export const metadata: Metadata = {
+  title: "Bamba Tickets | Discover Events & Live Voting in Kenya",
+  description:
+    "Explore upcoming concerts, festivals, and live voting polls across Kenya. Instant checkout with M-Pesa.",
 };
 
-export default async function StudioLayout({
+export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-
-  // If the user is NOT logged in, kick them to the login page immediately
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const user = {
-    name: session.user.name,
-    email: session.user.email,
-  }; 
-
-  // 2. Wrap the StudioShell in a strict overflow-hidden container
   return (
-    <div className="w-full max-w-[100vw] overflow-x-hidden">
-      <StudioShell user={user}>{children}</StudioShell>
+    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      {children}
     </div>
   );
 }

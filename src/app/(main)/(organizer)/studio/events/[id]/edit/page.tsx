@@ -155,25 +155,24 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
       </div>
 
       {/* 🚀 THE EDIT FORM COMPONENTS */}
-      <EditEventForm
-        event={{
-          id: event.id,
-          title: event.title,
-          description: event.description || "",
-          location: event.location,
-          dateString,
-          timeString,
-          imageUrl: event.imageUrl,
-          feeBearer: event.feeBearer as "ATTENDEE" | "ORGANIZER",
-          tiers: event.ticketTiers.map((t) => ({
-            id: t.id,
-            name: t.name,
-            price: t.price,
-            capacity: t.capacity,
-          })),
-          hasSales: hasSales,
-        }}
-      />
+     <EditEventForm 
+  event={{
+    id: event.id,
+    title: event.title,
+    category: event.category,
+    description: event.description || "",
+    location: event.location,
+    venueAddress: event.venueAddress, // 👈 Make sure these 3 are passed
+    latitude: event.latitude,         // 👈
+    longitude: event.longitude,       // 👈
+    dateString: event.date.toISOString().split("T")[0],
+    timeString: event.date.toISOString().split("T")[1].slice(0, 5),
+    imageUrl: event.imageUrl,
+    feeBearer: event.feeBearer,
+    tiers: event.ticketTiers,
+    hasSales: false // (or actual calculation)
+  }} 
+/>
     </div>
   );
 }

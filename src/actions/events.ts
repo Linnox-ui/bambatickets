@@ -22,6 +22,7 @@ export async function createEvent(formData: FormData) {
     }
 
     const title = formData.get("title") as string;
+    const category = (formData.get("category") as string) || "Concerts";
     const description = formData.get("description") as string;
     const location = formData.get("location") as string;
     const dateString = formData.get("date") as string;
@@ -39,7 +40,7 @@ export async function createEvent(formData: FormData) {
     let parsedTiers;
     try {
       parsedTiers = JSON.parse(tiersJson);
-    } catch (e) {
+    } catch {
       return { error: "Invalid ticket tiers data." };
     }
 
@@ -66,10 +67,11 @@ export async function createEvent(formData: FormData) {
       imageUrl = uploadResponse.secure_url;
     }
 
-    // Save to Neon Postgres
+    // Save to Database
     const newEvent = await prisma.event.create({
       data: {
         title,
+        category,
         description,
         location,
         date: eventDate,
@@ -166,26 +168,35 @@ export async function updateEvent(eventId: string, formData: FormData) {
     }
 
     const title = formData.get("title") as string;
-    const location = formData.get("location") as string;
+    const category = formData.get("category") as string | null;
     const description = formData.get("description") as string;
     const dateStr = formData.get("date") as string;
     const timeStr = formData.get("time") as string;
-    const feeBearer = formData.get("feeBearer") as FeeBearer; // 🚀 ADDED THIS
+    const feeBearer = formData.get("feeBearer") as FeeBearer;
     const tiersJson = formData.get("tiers") as string;
-    const imageFile = formData.get("imageFile") as File | null; // 🚀 ADDED THIS
+    const imageFile = formData.get("imageFile") as File | null;
+
+    // Location Fields
+    const location = formData.get("location") as string;
+    const venueAddress = formData.get("venueAddress") as string | null;
+    const latRaw = formData.get("latitude");
+    const lngRaw = formData.get("longitude");
+
+    const latitude = latRaw ? parseFloat(latRaw as string) : null;
+    const longitude = lngRaw ? parseFloat(lngRaw as string) : null;
 
     if (!title || !location || !dateStr || !timeStr || !tiersJson) {
       return { error: "Please fill out all required fields." };
     }
 
     const parsedTiers = JSON.parse(tiersJson);
-    if (parsedTiers.length === 0)
+    if (parsedTiers.length === 0) {
       return { error: "Event must have at least one ticket tier." };
+    }
 
     const eventDate = new Date(`${dateStr}T${timeStr}:00`);
 
-    // 🚀 ADDED IMAGE UPLOAD LOGIC FOR UPDATES
-    let imageUrl = event.imageUrl; // keep old image by default
+    let imageUrl = event.imageUrl;
     if (imageFile && imageFile.size > 0) {
       if (imageFile.size > 10 * 1024 * 1024) {
         return { error: "File size exceeds the 10MB limit." };
@@ -202,12 +213,15 @@ export async function updateEvent(eventId: string, formData: FormData) {
     }
 
     await prisma.$transaction(async (tx) => {
-      // 🚀 INCLUDED FEE BEARER & IMAGE URL IN THE UPDATE QUERY
       await tx.event.update({
         where: { id: eventId },
         data: {
           title,
+          category: category || event.category,
           location,
+          venueAddress, // 👈 Ensures the address is saved
+          latitude, // 👈 Ensures lat is saved
+          longitude, // 👈 Ensures lng is saved
           description,
           date: eventDate,
           feeBearer: feeBearer || event.feeBearer,
@@ -215,7 +229,10 @@ export async function updateEvent(eventId: string, formData: FormData) {
         },
       });
 
-      const incomingTierIds = parsedTiers.map((t: any) => t.id).filter(Boolean);
+      const incomingTierIds = parsedTiers
+        .map((t: { id?: string }) => t.id)
+        .filter(Boolean);
+
       const existingTiers = await tx.ticketTier.findMany({
         where: { eventId },
       });

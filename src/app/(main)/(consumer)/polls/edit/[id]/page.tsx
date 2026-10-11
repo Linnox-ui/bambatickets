@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
-import { auth } from "@/src/auth";
-import { votingPrisma } from "@/src/lib/voting-db";
+import { auth } from "@/auth";
+import { votingPrisma } from "@/lib/voting-db";
 import EditPollForm from "./_components/EditPollForm";
 
 export default async function EditPollPage({

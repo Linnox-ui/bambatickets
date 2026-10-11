@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createCampaignAction } from "@/src/actions/create-campaign";
-import { CalendarClock, Timer } from "lucide-react"; // ✨ NEW ICONS
-import { toast } from "sonner"; // ✨ USING SONNER
+import { createCampaignAction } from "@/actions/create-campaign";
+import { CalendarClock, Timer } from "lucide-react";
+import { toast } from "sonner";
 
 type CandidateInput = { name: string; file: File | null; preview: string };
 

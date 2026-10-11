@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { PrismaClient as VotingPrismaClient } from "@/src/generated/prisma-voting";
+import { PrismaClient as VotingPrismaClient } from "@/generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { auth } from "@/src/auth";
+import { auth } from "@/auth";
 import { 
   Search, 
   LayoutGrid, 

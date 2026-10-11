@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/src/auth";
+import { auth } from "@/auth";
 import CreatePollForm from "./_components/CreatePollForm";
 import Link from "next/link";
 import { ArrowLeft, Rocket } from "lucide-react";

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient as VotingPrismaClient } from "@/src/generated/prisma-voting";
+import { PrismaClient as VotingPrismaClient } from "@/generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { auth } from "@/src/auth"; 
+import { auth } from "@/auth"; 
 
 const adapter = new PrismaNeon({ connectionString: process.env.VOTING_DATABASE_URL! });
 const votingPrisma = new VotingPrismaClient({ adapter });

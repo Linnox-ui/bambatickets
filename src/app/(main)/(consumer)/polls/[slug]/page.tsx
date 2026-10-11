@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PrismaClient as VotingPrismaClient } from "../../../generated/prisma-voting";
+import { PrismaClient as VotingPrismaClient } from "@/generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import Link from "next/link";
 import { ArrowLeft, Users, Activity, Crown, Clock } from "lucide-react";

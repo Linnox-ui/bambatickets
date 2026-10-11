@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/src/auth";
-import { votingPrisma } from "@/src/lib/voting-db"; 
-import CampaignActionsMenu from "@/src/components/CampaignActionsMenu";
+import { auth } from "@/auth";
+import { votingPrisma } from "@/lib/voting-db"; 
+import CampaignActionsMenu from "@/components/CampaignActionsMenu";
 
 import { 
   BarChart3, Plus, ExternalLink, Trophy, Users, 
@@ -93,11 +93,11 @@ export default async function HostPollsDashboard() {
           
           /* --- CAMPAIGNS GRID --- */
           <div className="space-y-10">
-            {myCampaigns.map((campaign, index) => {
+            {myCampaigns.map((campaign: any, index: number) => {
               const totalCampaignVotes = campaign.candidates.reduce(
-                (sum, candidate) => sum + (candidate.total_votes || 0),
-                0
-              );
+  (sum: number, candidate: any) => sum + (candidate.total_votes || 0),
+  0
+);
 
               const validDate = campaign.created_at ? new Date(campaign.created_at) : new Date();
               const formattedDate = new Intl.DateTimeFormat('en-US', { 
@@ -159,7 +159,7 @@ export default async function HostPollsDashboard() {
 
                     {/* CANDIDATES LEADERBOARD */}
                     <div className="bg-slate-950/40 rounded-3xl p-6 border border-slate-800/40 space-y-6">
-                      {campaign.candidates.map((candidate, idx) => {
+                      {campaign.candidates.map((candidate: any, idx: number) => {
                         const candidateVotes = candidate.total_votes || 0;
                         const percentage = totalCampaignVotes > 0 
                           ? Math.round((candidateVotes / totalCampaignVotes) * 100) 

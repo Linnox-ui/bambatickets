@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { editCampaignAction } from "@/src/actions/edit-campaign";
+import { editCampaignAction } from "@/actions/edit-campaign";
 import { CalendarClock, Timer } from "lucide-react"; // ✨ NEW
 import { toast } from "sonner"; // ✨ NEW
 

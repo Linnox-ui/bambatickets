@@ -1,73 +1,103 @@
 import { NextResponse } from "next/server";
-import { PrismaClient as VotingPrismaClient } from "@/src/generated/prisma-voting";
+import { PrismaClient as VotingPrismaClient } from "@/generated/prisma-voting";
 import { PrismaNeon } from "@prisma/adapter-neon";
 
-const adapter = new PrismaNeon({ connectionString: process.env.VOTING_DATABASE_URL! });
+const adapter = new PrismaNeon({
+  connectionString: process.env.VOTING_DATABASE_URL!,
+});
 const votingPrisma = new VotingPrismaClient({ adapter });
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { campaignId, candidateId, userEmail, deviceHash, turnstileToken } = body;
+    const { campaignId, candidateId, userEmail, deviceHash, turnstileToken } =
+      body;
 
     // 1. Basic Validation
-    if (!campaignId || !candidateId || !userEmail || !deviceHash || !turnstileToken) {
-      return NextResponse.json({ error: "Missing required voting data." }, { status: 400 });
+    if (
+      !campaignId ||
+      !candidateId ||
+      !userEmail ||
+      !deviceHash ||
+      !turnstileToken
+    ) {
+      return NextResponse.json(
+        { error: "Missing required voting data." },
+        { status: 400 },
+      );
     }
 
     // 2. Cloudflare Turnstile Bot Verification
-    const turnstileVerify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`,
-    });
-    
+    const turnstileVerify = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `secret=${process.env.TURNSTILE_SECRET_KEY}&response=${turnstileToken}`,
+      },
+    );
+
     const turnstileResult = await turnstileVerify.json();
-    
+
     if (!turnstileResult.success) {
-      return NextResponse.json({ error: "Security check failed. We suspect bot activity." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Security check failed. We suspect bot activity." },
+        { status: 403 },
+      );
     }
 
     // 3. Fetch Campaign & ✨ STRICT TIMELINE VERIFICATION ✨
     const campaign = await votingPrisma.campaign.findUnique({
       where: { id: campaignId },
       // Fetch the timeline dates we added to the schema
-      select: { is_active: true, start_date: true, end_date: true } 
+      select: { is_active: true, start_date: true, end_date: true },
     });
 
     if (!campaign || !campaign.is_active) {
-      return NextResponse.json({ error: "This voting campaign is disabled." }, { status: 400 });
+      return NextResponse.json(
+        { error: "This voting campaign is disabled." },
+        { status: 400 },
+      );
     }
 
     const now = new Date();
-    
+
     // Check if voting hasn't started yet
     if (campaign.start_date && now < campaign.start_date) {
-      return NextResponse.json({ error: "Voting for this campaign has not officially opened yet." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Voting for this campaign has not officially opened yet." },
+        { status: 403 },
+      );
     }
 
     // Check if voting has already closed
     if (campaign.end_date && now > campaign.end_date) {
-      return NextResponse.json({ error: "Voting for this campaign has officially closed." }, { status: 403 });
+      return NextResponse.json(
+        { error: "Voting for this campaign has officially closed." },
+        { status: 403 },
+      );
     }
 
     // 4. Pre-check for duplicate votes (The "One Vote Per Person" rule)
     const existingVote = await votingPrisma.vote.findFirst({
       where: {
         campaign_id: campaignId,
-        OR: [
-          { user_email: userEmail },
-          { device_hash: deviceHash }
-        ]
-      }
+        OR: [{ user_email: userEmail }, { device_hash: deviceHash }],
+      },
     });
 
     if (existingVote) {
       if (existingVote.user_email === userEmail) {
-        return NextResponse.json({ error: "An account with this email has already voted." }, { status: 403 });
+        return NextResponse.json(
+          { error: "An account with this email has already voted." },
+          { status: 403 },
+        );
       }
       if (existingVote.device_hash === deviceHash) {
-        return NextResponse.json({ error: "A vote has already been cast from this device." }, { status: 403 });
+        return NextResponse.json(
+          { error: "A vote has already been cast from this device." },
+          { status: 403 },
+        );
       }
     }
 
@@ -79,28 +109,36 @@ export async function POST(req: Request) {
           candidate_id: candidateId,
           user_email: userEmail,
           device_hash: deviceHash,
-        }
+        },
       }),
       votingPrisma.candidate.update({
         where: { id: candidateId },
         data: {
           total_votes: {
-            increment: 1
-          }
-        }
-      })
+            increment: 1,
+          },
+        },
+      }),
     ]);
 
-    return NextResponse.json({ success: true, message: "Vote recorded securely." });
-
+    return NextResponse.json({
+      success: true,
+      message: "Vote recorded securely.",
+    });
   } catch (error: any) {
     console.error("Vote API Error:", error);
-    
+
     // Safety net for database race conditions
-    if (error.code === 'P2002') {
-       return NextResponse.json({ error: "You have already voted in this campaign." }, { status: 403 });
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "You have already voted in this campaign." },
+        { status: 403 },
+      );
     }
-    
-    return NextResponse.json({ error: "An unexpected server error occurred." }, { status: 500 });
+
+    return NextResponse.json(
+      { error: "An unexpected server error occurred." },
+      { status: 500 },
+    );
   }
 }

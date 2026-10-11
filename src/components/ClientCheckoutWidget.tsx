@@ -76,7 +76,7 @@ export default function CheckoutWidget({
       return;
     }
 
-    if (result.success && result.accessCode) {
+    if (result.success && result.access_code) {
       // 2. Load Paystack script on demand
       const scriptLoaded = await loadPaystackScript();
       if (!scriptLoaded) {
@@ -96,7 +96,7 @@ export default function CheckoutWidget({
         amount: selectedTier.price * quantity * 100, // Cents
         currency: "KES",
         ref: result.reference,
-        access_code: result.accessCode,
+        access_code: result.access_code,
         callback: (response: { reference: string }) => {
           toast.success("Payment successful! Reference: " + response.reference);
           console.log("Paystack Success Response:", response);

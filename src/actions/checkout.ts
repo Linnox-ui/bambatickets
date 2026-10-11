@@ -85,16 +85,18 @@ export async function checkAvailability(eventId: string, itemsParam: string) {
   }
 }
 
-export async function initializeCheckout(
-  eventId: string,
-  itemsParam: string,
-  formData: FormData,
-) {
-  const customerName = (formData.get("customerName") as string)?.trim();
-  const customerEmail = (formData.get("customerEmail") as string)
-    ?.trim()
-    .toLowerCase();
+export async function initializeCheckout(formData: FormData) {
+  // 1. Extract exactly what the frontend CheckoutWidget appended to FormData
+  const eventId = formData.get("eventId") as string;
+  const tierId = formData.get("tierId") as string;
+  const quantityStr = formData.get("quantity") as string;
+  const customerName = (formData.get("name") as string)?.trim();
+  const customerEmail = (formData.get("email") as string)?.trim().toLowerCase();
 
+  // 2. Validate Inputs
+  if (!eventId || !tierId || !quantityStr) {
+    return { error: "Missing event or ticket information." };
+  }
   if (!customerName || !customerEmail) {
     return { error: "Name and email are required." };
   }
@@ -102,32 +104,20 @@ export async function initializeCheckout(
     return { error: "Please provide a valid email address." };
   }
 
-  const rawItems = itemsParam
-    .split(",")
-    .map((item) => {
-      const [tierId, qty] = item.split(":");
-      return { tierId, quantity: parseInt(qty, 10) };
-    })
-    .filter((i) => i.tierId && Number.isFinite(i.quantity) && i.quantity > 0);
-
-  if (rawItems.length === 0) {
-    return { error: "No valid tickets selected." };
+  const quantity = parseInt(quantityStr, 10);
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return { error: "Invalid ticket quantity." };
   }
 
-  const mergedItems = new Map<string, number>();
-  for (const item of rawItems) {
-    mergedItems.set(
-      item.tierId,
-      (mergedItems.get(item.tierId) ?? 0) + item.quantity,
-    );
-  }
-
-  const totalRequested = [...mergedItems.values()].reduce((a, b) => a + b, 0);
-  if (totalRequested > MAX_TICKETS_PER_ORDER) {
+  if (quantity > MAX_TICKETS_PER_ORDER) {
     return {
       error: `You can order at most ${MAX_TICKETS_PER_ORDER} tickets at a time.`,
     };
   }
+
+  // 3. Setup items map for the transaction (since we only buy one tier type at a time here)
+  const mergedItems = new Map<string, number>();
+  mergedItems.set(tierId, quantity);
 
   let bookingId: string | null = null;
   let bookingReference: string | null = null;
@@ -144,9 +134,9 @@ export async function initializeCheckout(
       let subtotal = 0;
       const ticketCreations: { tierId: string }[] = [];
 
-      for (const [tierId, quantity] of mergedItems) {
+      for (const [tId, qty] of mergedItems) {
         const rows = await tx.$queryRaw(
-          Prisma.sql`SELECT id, price, capacity, name, "eventId" FROM ticket_tiers WHERE id = ${tierId} FOR UPDATE`,
+          Prisma.sql`SELECT id, price, capacity, name, "eventId" FROM ticket_tiers WHERE id = ${tId} FOR UPDATE`,
         );
         const tier = (rows as LockedTier[])[0];
 
@@ -154,15 +144,15 @@ export async function initializeCheckout(
           throw new CheckoutError("Invalid ticket tier selected.");
         }
 
-        const soldCount = await tx.ticket.count({ where: { tierId } });
-        if (soldCount + quantity > tier.capacity) {
+        const soldCount = await tx.ticket.count({ where: { tierId: tId } });
+        if (soldCount + qty > tier.capacity) {
           throw new CheckoutError(
             `Only ${Math.max(tier.capacity - soldCount, 0)} ticket(s) left for "${tier.name}".`,
           );
         }
 
-        subtotal += Number(tier.price) * quantity;
-        for (let i = 0; i < quantity; i++) ticketCreations.push({ tierId });
+        subtotal += Number(tier.price) * qty;
+        for (let i = 0; i < qty; i++) ticketCreations.push({ tierId: tId });
       }
 
       subtotal = round2(subtotal);

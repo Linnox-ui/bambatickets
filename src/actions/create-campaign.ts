@@ -1,7 +1,7 @@
 "use server";
 
-import { auth } from "@/src/auth";
-import { votingPrisma } from "@/src/lib/voting-db";
+import { auth } from "@/auth";
+import { votingPrisma } from "@/lib/voting-db";
 import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -20,7 +20,7 @@ export async function createCampaignAction(formData: FormData) {
   const title = formData.get("title") as string;
   const slug = formData.get("slug") as string;
   const candidateCount = parseInt(formData.get("candidateCount") as string);
-  
+
   // ✨ NEW: Extract dates
   const startDate = new Date(formData.get("startDate") as string);
   const endDate = new Date(formData.get("endDate") as string);
@@ -37,11 +37,13 @@ export async function createCampaignAction(formData: FormData) {
   try {
     const existingCampaign = await votingPrisma.campaign.findUnique({
       where: { slug: slug },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (existingCampaign) {
-      return { error: "A poll with this URL slug already exists. Try another." };
+      return {
+        error: "A poll with this URL slug already exists. Try another.",
+      };
     }
 
     const newCandidates: NewCandidate[] = [];
@@ -62,7 +64,7 @@ export async function createCampaignAction(formData: FormData) {
             (error, result) => {
               if (error) reject(error);
               else resolve(result);
-            }
+            },
           );
           uploadStream.end(buffer);
         });
@@ -79,9 +81,9 @@ export async function createCampaignAction(formData: FormData) {
         slug,
         host_id: session.user.id,
         start_date: startDate, // ✨ NEW
-        end_date: endDate,     // ✨ NEW
+        end_date: endDate, // ✨ NEW
         candidates: {
-          create: newCandidates.map(c => ({
+          create: newCandidates.map((c) => ({
             name: c.name,
             image_url: c.imageUrl || null,
           })),
@@ -93,9 +95,10 @@ export async function createCampaignAction(formData: FormData) {
     revalidatePath("/polls");
 
     return { success: true, slug: campaign.slug };
-
   } catch (error: any) {
     console.error("Create Campaign Action Error:", error);
-    return { error: "An unexpected error occurred while creating the campaign." };
+    return {
+      error: "An unexpected error occurred while creating the campaign.",
+    };
   }
 }

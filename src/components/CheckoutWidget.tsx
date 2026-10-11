@@ -70,7 +70,7 @@ export default function CheckoutWidget({
       return;
     }
 
-    if (result.success && result.accessCode) {
+    if (result.success && result.access_code) {
       const scriptLoaded = await loadPaystackScript();
       if (!scriptLoaded) {
         toast.error("Failed to load payment gateway.", { id: toastId });
@@ -90,7 +90,7 @@ export default function CheckoutWidget({
         amount: selectedTier.price * quantity * 100,
         currency: "KES",
         ref: result.reference,
-        access_code: result.accessCode,
+        access_code: result.access_code,
 
         callback: function (response: { reference: string }) {
           toast.success("Payment successful! Redirecting...");

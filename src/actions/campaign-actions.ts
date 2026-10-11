@@ -1,7 +1,7 @@
 "use server";
 
-import { auth } from "@/src/auth";
-import { votingPrisma } from "@/src/lib/voting-db";
+import { auth } from "@/auth";
+import { votingPrisma } from "@/lib/voting-db";
 import { revalidatePath } from "next/cache";
 
 export async function deleteCampaignAction(campaignId: string) {
@@ -34,7 +34,6 @@ export async function deleteCampaignAction(campaignId: string) {
     // Instantly refresh the dashboard page
     revalidatePath("/polls/dashboard");
     return { success: true };
-    
   } catch (error) {
     console.error("Failed to delete campaign:", error);
     return { error: "An unexpected error occurred while deleting." };
